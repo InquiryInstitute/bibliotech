@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bibliotech - Inquiry Institute Library</title>
+    <meta name="description" content="Digital library featuring Project Gutenberg books, organized by Dewey Decimal system">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Bibliotech</h1>
+            <p class="subtitle">Inquiry Institute Digital Library</p>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="library-info">
+                <h2>Digital Bookshelf</h2>
+                <p>Browse our collection of Project Gutenberg books, organized by the Dewey Decimal Classification system.</p>
+                <div class="controls">
+                    <input type="text" id="search" placeholder="Search books by title or author...">
+                    <select id="dewey-filter">
+                        <option value="">All Categories</option>
+                        <option value="000">000 - Computer Science, Information & General Works</option>
+                        <option value="100">100 - Philosophy & Psychology</option>
+                        <option value="200">200 - Religion</option>
+                        <option value="300">300 - Social Sciences</option>
+                        <option value="400">400 - Language</option>
+                        <option value="500">500 - Science</option>
+                        <option value="600">600 - Technology</option>
+                        <option value="700">700 - Arts & Recreation</option>
+                        <option value="800">800 - Literature</option>
+                        <option value="900">900 - History & Geography</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Loading books...</p>
+            </div>
+
+            <div id="bookshelf" class="bookshelf">
+                <!-- Books will be rendered here -->
+            </div>
+
+            <div id="empty-state" class="empty-state" style="display: none;">
+                <p>No books found. Try adjusting your search or filter.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Bibliotech - Inquiry Institute. All rights reserved.</p>
+            <p>Books provided by <a href="https://www.gutenberg.org/" target="_blank">Project Gutenberg</a></p>
+        </div>
+    </footer>
+
+    <!-- Book Detail Modal -->
+    <div id="book-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="book-details"></div>
+        </div>
+    </div>
+
+    <!-- Configuration (load first) -->
+    <script src="config.js"></script>
+    <!-- Supabase Initialization -->
+    <script type="module" src="supabase-init.js"></script>
+    <!-- Main Application -->
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+{
+  "name": "bibliotech",
+  "version": "1.0.0",
+  "description": "Library system for Inquiry Institute with Project Gutenberg books",
+  "main": "index.html",
+  "scripts": {
+    "setup": "node setup-config.js",
+    "build-config": "node build-config.js",
+    "setup-db": "node setup-database.js",
+    "setup-db-cli": "chmod +x setup-database-cli.sh && ./setup-database-cli.sh",
+    "populate": "node populate-books.js",
+    "dev": "npm run build-config && npx serve ."
+  },
+  "keywords": [
+    "library",
+    "books",
+    "gutenberg",
+    "inquiry-institute"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {}
+}
