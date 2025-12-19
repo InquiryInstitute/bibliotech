@@ -36,10 +36,25 @@ function tryInit() {
     }
     
     // Check if config is set
-    if (!SUPABASE_URL || SUPABASE_URL === 'YOUR_SUPABASE_URL') {
-        console.error('Please configure Supabase URL and key in config.js');
-        if (typeof showError === 'function') {
-            showError('Please configure Supabase URL and key in config.js');
+    if (!SUPABASE_URL || 
+        SUPABASE_URL === 'YOUR_SUPABASE_URL' || 
+        SUPABASE_URL === 'your_supabase_project_url') {
+        console.error('Please configure Supabase URL and key in config.js or .env file');
+        const bookshelfEl = document.getElementById('bookshelf');
+        if (bookshelfEl) {
+            bookshelfEl.innerHTML = `
+                <div class="error-message">
+                    <p><strong>Configuration Required</strong></p>
+                    <p>Please update config.js with your Supabase credentials:</p>
+                    <ol style="text-align: left; max-width: 600px; margin: 20px auto;">
+                        <li>Get your Supabase URL and anon key from your Supabase dashboard</li>
+                        <li>Update config.js or run: <code>npm run build-config</code> (if you have .env set up)</li>
+                        <li>Refresh this page</li>
+                    </ol>
+                    <p>Or edit .env file and run: <code>npm run build-config</code></p>
+                </div>
+            `;
+            bookshelfEl.style.display = 'block';
         }
         return;
     }
@@ -109,7 +124,7 @@ async function init() {
 }
 
 /**
- * Load books from Supabase
+ * Load books from Supabase with pagination for performance
  */
 async function loadBooks() {
     const loadingEl = document.getElementById('loading');
@@ -121,17 +136,40 @@ async function loadBooks() {
     emptyStateEl.style.display = 'none';
 
     try {
-        const { data, error } = await supabase
-            .from('books')
-            .select('*, faculty:faculty_id(*)')
-            .order('dewey_decimal', { ascending: true })
-            .order('title', { ascending: true });
+        // Load books in batches for better performance
+        // Start with first 500 books, load more as needed
+        const BATCH_SIZE = 500;
+        let allData = [];
+        let from = 0;
+        let hasMore = true;
 
-        if (error) {
-            throw error;
+        while (hasMore) {
+            const { data, error, count } = await supabase
+                .from('books')
+                .select('id, gutenberg_id, title, author, dewey_decimal, language, subject, publication_date, faculty_id, description', { count: 'exact' })
+                .order('dewey_decimal', { ascending: true })
+                .order('title', { ascending: true })
+                .range(from, from + BATCH_SIZE - 1);
+
+            if (error) {
+                throw error;
+            }
+
+            if (data && data.length > 0) {
+                allData = allData.concat(data);
+                from += BATCH_SIZE;
+                hasMore = data.length === BATCH_SIZE && (count === null || from < count);
+                
+                // Update loading message
+                if (loadingEl) {
+                    loadingEl.querySelector('p').textContent = `Loading books... (${allData.length}${count ? ` of ${count}` : ''})`;
+                }
+            } else {
+                hasMore = false;
+            }
         }
 
-        allBooks = data || [];
+        allBooks = allData;
         filteredBooks = [...allBooks];
 
         loadingEl.style.display = 'none';
@@ -139,7 +177,7 @@ async function loadBooks() {
     } catch (error) {
         console.error('Error loading books:', error);
         loadingEl.style.display = 'none';
-        showError('Failed to load books. Please check your Supabase configuration.');
+        showError(`Failed to load books: ${error.message}. Please check your Supabase configuration.`);
     }
 }
 
