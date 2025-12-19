@@ -68,22 +68,67 @@ async function fetchGutenbergCatalog() {
  * Parse CSV data
  */
 function parseCSV(csvText) {
-    const lines = csvText.split('\n');
-    const headers = lines[0].split('\t');
+    const lines = csvText.split('\n').filter(line => line.trim());
+    if (lines.length < 2) {
+        console.error('Catalog appears to be empty or invalid');
+        return [];
+    }
+    
+    // Try tab-separated first, then comma-separated
+    const delimiter = lines[0].includes('\t') ? '\t' : ',';
+    const headers = lines[0].split(delimiter).map(h => h.trim().replace(/^"|"$/g, ''));
     const books = [];
+    
+    console.log(`Found ${lines.length - 1} lines in catalog`);
+    console.log(`Headers: ${headers.slice(0, 5).join(', ')}...`);
+    
+    // Find the column name for Text# (might be 'Text#' or 'text#' or 'id')
+    const textCol = headers.findIndex(h => 
+        h.toLowerCase().includes('text') || 
+        h.toLowerCase() === 'id' ||
+        h === 'Text#'
+    );
+    
+    if (textCol === -1) {
+        console.error('Could not find Text# column. Available columns:', headers);
+        return [];
+    }
     
     for (let i = 1; i < lines.length; i++) {
         if (!lines[i].trim()) continue;
-        const values = lines[i].split('\t');
+        
+        // Handle quoted fields that might contain delimiters
+        const values = [];
+        let current = '';
+        let inQuotes = false;
+        
+        for (let j = 0; j < lines[i].length; j++) {
+            const char = lines[i][j];
+            if (char === '"') {
+                inQuotes = !inQuotes;
+            } else if ((char === delimiter || char === '\n') && !inQuotes) {
+                values.push(current.trim().replace(/^"|"$/g, ''));
+                current = '';
+            } else {
+                current += char;
+            }
+        }
+        if (current) values.push(current.trim().replace(/^"|"$/g, ''));
+        
         const book = {};
         headers.forEach((header, index) => {
             book[header] = values[index] || '';
         });
-        if (book['Text#']) {
+        
+        // Check if this book has a valid Text#/ID
+        const textId = book[headers[textCol]] || book['Text#'] || book['text#'] || book['ID'] || book['id'];
+        if (textId && !isNaN(parseInt(textId))) {
+            book['Text#'] = textId;
             books.push(book);
         }
     }
     
+    console.log(`Parsed ${books.length} books from catalog`);
     return books;
 }
 

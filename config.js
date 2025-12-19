@@ -9,8 +9,8 @@
 
 // Supabase Configuration
 const CONFIG = {
-    SUPABASE_URL: 'your_supabase_project_url',
-    SUPABASE_ANON_KEY: 'your_supabase_anon_key'
+    SUPABASE_URL: 'https://xougqdomkoisrxdnagcj.supabase.co',
+    SUPABASE_ANON_KEY: 'sb_publishable_1Zt0VjMX57VdYC7dH-GG1A_RFZyuwc9'
 };
 
 // Export for use in other files

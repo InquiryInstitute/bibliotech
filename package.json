@@ -6,6 +6,7 @@
   "scripts": {
     "setup": "node setup-config.js",
     "build-config": "node build-config.js",
+    "check-books": "node check-books.js",
     "setup-db": "node setup-database.js",
     "setup-db-cli": "chmod +x setup-database-cli.sh && ./setup-database-cli.sh",
     "populate": "node populate-books.js",
@@ -20,8 +21,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@supabase/supabase-js": "^2.39.0",
-    "dotenv": "^16.3.1"
-  },
-  "devDependencies": {}
+    "@supabase/supabase-js": "^2.89.0",
+    "dotenv": "^16.6.1"
+  }
 }
