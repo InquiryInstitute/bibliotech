@@ -443,8 +443,11 @@ function renderBookSpine(book, index = 0) {
     // Generate a color based on Dewey Decimal for visual variety
     const color = getColorForDewey(dewey);
     
-    // Truncate title if too long
-    const displayTitle = title.length > 28 ? title.substring(0, 25) + '...' : title;
+    // Truncate title and author if too long for spine
+    const maxTitleLength = 30;
+    const maxAuthorLength = 25;
+    const displayTitle = title.length > maxTitleLength ? title.substring(0, maxTitleLength - 3) + '...' : title;
+    const displayAuthor = author.length > maxAuthorLength ? author.substring(0, maxAuthorLength - 3) + '...' : author;
     
     // Add staggered animation delay for visual effect
     const animationDelay = (index % 20) * 0.03; // Stagger books in groups
@@ -453,10 +456,10 @@ function renderBookSpine(book, index = 0) {
         <div class="book-spine" 
              data-book-id="${book.id}" 
              style="--spine-color: ${color}; animation-delay: ${animationDelay}s;"
-             title="${escapeHtml(title)} by ${escapeHtml(author)}">
+             title="${escapeHtml(title)} by ${escapeHtml(author)} - ${dewey}">
             <div class="spine-content">
                 <div class="spine-title">${displayTitle}</div>
-                <div class="spine-author">${author}</div>
+                <div class="spine-author">${displayAuthor}</div>
                 <div class="spine-dewey">${dewey}</div>
             </div>
         </div>
