@@ -44,48 +44,53 @@ body {
     padding: 20px;
 }
 
-/* Header - Library Style */
+/* Header - Match Inquiry.Institute Style */
 header {
-    background: linear-gradient(180deg, var(--wood-dark) 0%, var(--wood-medium) 100%);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    padding: 2rem 0;
-    margin-bottom: 0;
+    background-color: var(--bg-color);
+    box-shadow: var(--shadow);
     position: sticky;
     top: 0;
     z-index: 100;
-    border-bottom: 4px solid var(--shelf-back);
 }
 
-header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+nav {
+    padding: 1rem 0;
 }
 
-header .container {
+nav .container {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-header h1 {
-    font-size: 2rem;
-    color: #fff;
-    margin: 0;
-    font-weight: 700;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-    letter-spacing: 1px;
+.logo h1 {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin-bottom: 0.25rem;
 }
 
-.subtitle {
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 0.9rem;
-    font-style: italic;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+.logo .subtitle {
+    font-size: 0.875rem;
+    color: var(--secondary-color);
+}
+
+.nav-links {
+    display: flex;
+    list-style: none;
+    gap: 2rem;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: var(--text-color);
+    font-weight: 500;
+    transition: color 0.3s;
+}
+
+.nav-links a:hover {
+    color: var(--primary-color);
 }
 
 /* Library Info - Card Style */

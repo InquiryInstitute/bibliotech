@@ -94,6 +94,13 @@ function parseCSV(csvText) {
         return [];
     }
     
+    // Find author column index
+    const authorCol = headers.findIndex(h => 
+        h.toLowerCase() === 'authors' || 
+        h.toLowerCase() === 'author' ||
+        h.toLowerCase().includes('author')
+    );
+    
     for (let i = 1; i < lines.length; i++) {
         if (!lines[i].trim()) continue;
         
@@ -124,6 +131,12 @@ function parseCSV(csvText) {
         const textId = book[headers[textCol]] || book['Text#'] || book['text#'] || book['ID'] || book['id'];
         if (textId && !isNaN(parseInt(textId))) {
             book['Text#'] = textId;
+            
+            // Ensure Author field is properly extracted
+            if (!book['Author'] && authorCol !== -1 && values[authorCol]) {
+                book['Author'] = values[authorCol];
+            }
+            
             books.push(book);
         }
     }
@@ -210,10 +223,21 @@ async function insertBook(book) {
     // Get cover URL from Project Gutenberg
     const coverUrl = getGutenbergCoverUrl(gutenbergId);
     
+    // Extract author - handle various formats
+    let author = book['Author'] || book['Authors'] || '';
+    // Clean up author field (remove extra quotes, trim)
+    if (author) {
+        author = author.replace(/^"|"$/g, '').trim();
+        // If author contains multiple authors, take the first one
+        if (author.includes(';')) {
+            author = author.split(';')[0].trim();
+        }
+    }
+    
     const bookData = {
         gutenberg_id: gutenbergId,
-        title: book['Title'] || 'Untitled',
-        author: book['Author'] || 'Unknown',
+        title: (book['Title'] || 'Untitled').replace(/^"|"$/g, '').trim(),
+        author: author || 'Unknown',
         dewey_decimal: getDeweyDecimal(book),
         language: book['Language'] || 'en',
         subject: book['Subject'] || '',
