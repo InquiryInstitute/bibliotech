@@ -10,6 +10,8 @@
     "setup-db": "node setup-database.js",
     "setup-db-cli": "chmod +x setup-database-cli.sh && ./setup-database-cli.sh",
     "populate": "node populate-books.js",
+    "populate-wikibooks": "node populate-wikibooks.js",
+    "migrate": "node run-migration.js",
     "update-covers": "node update-covers.js",
     "fix-authors": "node fix-authors.js",
     "generate-marginalia": "node generate-marginalia.js",
@@ -26,5 +28,8 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.89.0",
     "dotenv": "^16.6.1"
+  },
+  "devDependencies": {
+    "pg": "^8.16.3"
   }
 }

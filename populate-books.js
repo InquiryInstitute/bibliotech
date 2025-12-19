@@ -193,16 +193,44 @@ async function checkCoverExists(url) {
 /**
  * Insert book into Supabase
  */
+/**
+ * Generate book URI from source and identifier
+ */
+function generateBookUri(source, identifier) {
+    return `${source}://${identifier}`;
+}
+
 async function insertBook(book) {
     const gutenbergId = parseInt(book['Text#']);
     if (!gutenbergId) return null;
     
-    // Check if book already exists
-    const { data: existing } = await supabase
+    const source = 'gutenberg';
+    const sourceId = gutenbergId.toString();
+    const bookUri = generateBookUri(source, sourceId);
+    
+    // Check if book already exists (by book_uri, or fallback to source + source_id)
+    let existing = null;
+    
+    // Try book_uri first
+    const { data: existingByUri } = await supabase
         .from('books')
         .select('id, cover_url')
-        .eq('gutenberg_id', gutenbergId)
-        .single();
+        .eq('book_uri', bookUri)
+        .maybeSingle();
+    
+    if (existingByUri) {
+        existing = existingByUri;
+    } else {
+        // Fallback to source + source_id
+        const { data: existingBySource } = await supabase
+            .from('books')
+            .select('id, cover_url')
+            .eq('source', source)
+            .eq('source_id', sourceId)
+            .maybeSingle();
+        
+        existing = existingBySource;
+    }
     
     if (existing) {
         // If book exists but doesn't have a cover, try to add it
@@ -235,7 +263,10 @@ async function insertBook(book) {
     }
     
     const bookData = {
-        gutenberg_id: gutenbergId,
+        book_uri: bookUri, // Primary unique identifier
+        source: source, // Keep for backward compatibility and filtering
+        source_id: sourceId, // Keep for backward compatibility
+        gutenberg_id: gutenbergId, // Keep for backward compatibility
         title: (book['Title'] || 'Untitled').replace(/^"|"$/g, '').trim(),
         author: author || 'Unknown',
         dewey_decimal: getDeweyDecimal(book),

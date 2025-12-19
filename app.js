@@ -213,7 +213,7 @@ async function loadBooksForCategory(category) {
         
         const { data, error } = await supabase
             .from('books')
-            .select('id, gutenberg_id, title, author, dewey_decimal, language, subject, publication_date, faculty_id, description, cover_url')
+            .select('id, gutenberg_id, book_uri, source, source_id, title, author, dewey_decimal, language, subject, publication_date, faculty_id, description, cover_url')
             .gte('dewey_decimal', categoryStart)
             .lt('dewey_decimal', categoryEnd)
             .order('dewey_decimal', { ascending: true })
@@ -627,9 +627,7 @@ async function showBookDetails(book) {
             <button onclick="openBookReader('${book.id}')" class="btn btn-primary">
                 Read Book
             </button>
-            <a href="https://www.gutenberg.org/ebooks/${book.gutenberg_id}" target="_blank" class="btn btn-secondary">
-                View on Project Gutenberg
-            </a>
+            ${getBookSourceLink(book)}
         </div>
     `;
     
@@ -992,6 +990,66 @@ function showMarginaliaDetails(marg) {
 
 // Make openBookReader available globally
 window.openBookReader = openBookReader;
+
+/**
+ * Parse book URI to extract source and identifier
+ */
+function parseBookUri(bookUri) {
+    if (!bookUri) return null;
+    const parts = bookUri.split('://');
+    if (parts.length !== 2) return null;
+    return {
+        source: parts[0],
+        identifier: parts[1]
+    };
+}
+
+/**
+ * Get the appropriate source link for a book
+ */
+function getBookSourceLink(book) {
+    // Try to get source from book_uri first, then fallback to source field
+    let source, identifier;
+    
+    if (book.book_uri) {
+        const parsed = parseBookUri(book.book_uri);
+        if (parsed) {
+            source = parsed.source;
+            identifier = parsed.identifier;
+        }
+    }
+    
+    // Fallback to source/source_id fields
+    if (!source) {
+        source = book.source || (book.gutenberg_id ? 'gutenberg' : 'unknown');
+        identifier = book.source_id || book.gutenberg_id?.toString();
+    }
+    
+    switch (source) {
+        case 'gutenberg':
+            if (identifier || book.gutenberg_id) {
+                const gutenbergId = identifier || book.gutenberg_id;
+                return `<a href="https://www.gutenberg.org/ebooks/${gutenbergId}" target="_blank" class="btn btn-secondary">
+                    View on Project Gutenberg
+                </a>`;
+            }
+            break;
+        case 'wikibooks':
+            if (identifier || book.source_id) {
+                const pageTitle = identifier ? decodeURIComponent(identifier) : decodeURIComponent(book.source_id);
+                return `<a href="https://en.wikibooks.org/wiki/${encodeURIComponent(pageTitle)}" target="_blank" class="btn btn-secondary">
+                    View on Wikibooks
+                </a>`;
+            }
+            break;
+        case 'custom':
+            // For custom books, you might want to link to your own system
+            return `<span class="btn btn-secondary">Custom Book</span>`;
+        default:
+            return '';
+    }
+    return '';
+}
 
 /**
  * Escape HTML to prevent XSS

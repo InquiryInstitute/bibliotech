@@ -3,9 +3,12 @@
 -- Note: faculty table already exists with TEXT id, so faculty_id is TEXT
 
 -- Create books table (faculty table already exists)
+-- Supports multiple sources: gutenberg, wikibooks, custom, etc.
 CREATE TABLE IF NOT EXISTS books (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    gutenberg_id INTEGER UNIQUE NOT NULL,
+    source TEXT DEFAULT 'gutenberg' NOT NULL,
+    source_id TEXT NOT NULL,
+    gutenberg_id INTEGER, -- Kept for backward compatibility, nullable
     title TEXT NOT NULL,
     author TEXT,
     dewey_decimal TEXT,
@@ -18,7 +21,8 @@ CREATE TABLE IF NOT EXISTS books (
     cover_url TEXT,
     description TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    CONSTRAINT books_source_source_id_unique UNIQUE (source, source_id)
 );
 
 -- Create index on dewey_decimal for sorting
@@ -27,8 +31,14 @@ CREATE INDEX IF NOT EXISTS idx_books_dewey_decimal ON books(dewey_decimal);
 -- Create index on faculty_id for joins
 CREATE INDEX IF NOT EXISTS idx_books_faculty_id ON books(faculty_id);
 
--- Create index on gutenberg_id for lookups
+-- Create index on gutenberg_id for lookups (backward compatibility)
 CREATE INDEX IF NOT EXISTS idx_books_gutenberg_id ON books(gutenberg_id);
+
+-- Create index on source for filtering
+CREATE INDEX IF NOT EXISTS idx_books_source ON books(source);
+
+-- Create index on source_id for lookups
+CREATE INDEX IF NOT EXISTS idx_books_source_id ON books(source_id);
 
 -- Create marginalia table for faculty comments on books
 CREATE TABLE IF NOT EXISTS marginalia (
