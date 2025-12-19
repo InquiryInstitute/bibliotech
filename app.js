@@ -124,7 +124,36 @@ async function init() {
 }
 
 /**
- * Load books from Supabase with pagination for performance
+ * Load books for a specific Dewey Decimal category
+ */
+async function loadBooksForCategory(category) {
+    try {
+        // Get the range for this category (e.g., 800-899 for category 800)
+        const categoryStart = category;
+        const categoryEnd = (parseInt(category) + 99).toString().padStart(3, '0');
+        
+        const { data, error } = await supabase
+            .from('books')
+            .select('id, gutenberg_id, title, author, dewey_decimal, language, subject, publication_date, faculty_id, description')
+            .gte('dewey_decimal', categoryStart)
+            .lt('dewey_decimal', categoryEnd)
+            .order('dewey_decimal', { ascending: true })
+            .order('title', { ascending: true })
+            .limit(1000); // Limit per category
+
+        if (error) {
+            throw error;
+        }
+
+        return data || [];
+    } catch (error) {
+        console.error(`Error loading books for category ${category}:`, error);
+        return [];
+    }
+}
+
+/**
+ * Load all category structures first, then load books per shelf
  */
 async function loadBooks() {
     const loadingEl = document.getElementById('loading');
@@ -136,44 +165,62 @@ async function loadBooks() {
     emptyStateEl.style.display = 'none';
 
     try {
-        // Load books in batches for better performance
-        // Start with first 500 books, load more as needed
-        const BATCH_SIZE = 500;
-        let allData = [];
-        let from = 0;
-        let hasMore = true;
-
-        while (hasMore) {
-            const { data, error, count } = await supabase
-                .from('books')
-                .select('id, gutenberg_id, title, author, dewey_decimal, language, subject, publication_date, faculty_id, description', { count: 'exact' })
-                .order('dewey_decimal', { ascending: true })
-                .order('title', { ascending: true })
-                .range(from, from + BATCH_SIZE - 1);
-
-            if (error) {
-                throw error;
-            }
-
-            if (data && data.length > 0) {
-                allData = allData.concat(data);
-                from += BATCH_SIZE;
-                hasMore = data.length === BATCH_SIZE && (count === null || from < count);
-                
-                // Update loading message
-                if (loadingEl) {
-                    loadingEl.querySelector('p').textContent = `Loading books... (${allData.length}${count ? ` of ${count}` : ''})`;
-                }
-            } else {
-                hasMore = false;
-            }
+        // First, get a count of books per category to show shelf structure
+        const categories = ['000', '100', '200', '300', '400', '500', '600', '700', '800', '900'];
+        
+        // Render empty shelves first
+        let html = '';
+        const categoryData = {};
+        
+        for (const category of categories) {
+            const categoryStart = category;
+            const categoryEnd = (parseInt(category) + 99).toString().padStart(3, '0');
+            
+            html += `<div class="bookshelf-section" data-category="${category}">
+                <h3 class="category-header">${getCategoryName(category)}</h3>
+                <div class="book-row" id="shelf-${category}">
+                    <div class="shelf-loading">Loading books...</div>
+                </div>
+            </div>`;
         }
-
-        allBooks = allData;
-        filteredBooks = [...allBooks];
-
+        
+        bookshelfEl.innerHTML = html;
+        bookshelfEl.style.display = 'block';
         loadingEl.style.display = 'none';
-        renderBookshelf();
+        
+        // Load books for each category in parallel
+        const loadPromises = categories.map(async (category) => {
+            const books = await loadBooksForCategory(category);
+            categoryData[category] = books;
+            
+            // Render books for this shelf
+            const shelfEl = document.getElementById(`shelf-${category}`);
+            if (shelfEl) {
+                if (books.length === 0) {
+                    shelfEl.innerHTML = '<div class="shelf-empty">No books in this category</div>';
+                } else {
+                    shelfEl.innerHTML = books.map(book => renderBookSpine(book)).join('');
+                    
+                    // Add click handlers
+                    shelfEl.querySelectorAll('.book-spine').forEach(spine => {
+                        spine.addEventListener('click', () => {
+                            const bookId = spine.dataset.bookId;
+                            const book = books.find(b => b.id === bookId);
+                            if (book) {
+                                showBookDetails(book);
+                            }
+                        });
+                    });
+                }
+            }
+        });
+        
+        await Promise.all(loadPromises);
+        
+        // Store all books for search/filter functionality
+        allBooks = Object.values(categoryData).flat();
+        filteredBooks = [...allBooks];
+        
     } catch (error) {
         console.error('Error loading books:', error);
         loadingEl.style.display = 'none';
@@ -330,16 +377,65 @@ function handleSearch() {
  * Handle Dewey filter
  */
 function handleFilter() {
-    filterBooks();
+    const deweyFilter = document.getElementById('dewey-filter').value;
+    if (!deweyFilter) {
+        // If "All Categories" selected, reload all shelves
+        loadBooks();
+    } else {
+        filterBooks();
+    }
 }
 
 /**
  * Filter books based on search and category
  */
-function filterBooks() {
+async function filterBooks() {
     const searchQuery = document.getElementById('search').value.toLowerCase().trim();
     const deweyFilter = document.getElementById('dewey-filter').value;
 
+    // If filtering by category, load that category's books
+    if (deweyFilter && !searchQuery) {
+        const loadingEl = document.getElementById('loading');
+        const bookshelfEl = document.getElementById('bookshelf');
+        
+        loadingEl.style.display = 'block';
+        bookshelfEl.style.display = 'none';
+        
+        const books = await loadBooksForCategory(deweyFilter);
+        
+        // Show only the selected category
+        let html = `<div class="bookshelf-section" data-category="${deweyFilter}">
+            <h3 class="category-header">${getCategoryName(deweyFilter)}</h3>
+            <div class="book-row">`;
+        
+        if (books.length === 0) {
+            html += '<div class="shelf-empty">No books in this category</div>';
+        } else {
+            html += books.map(book => renderBookSpine(book)).join('');
+        }
+        
+        html += `</div></div>`;
+        
+        bookshelfEl.innerHTML = html;
+        bookshelfEl.style.display = 'block';
+        loadingEl.style.display = 'none';
+        
+        // Add click handlers
+        bookshelfEl.querySelectorAll('.book-spine').forEach(spine => {
+            spine.addEventListener('click', () => {
+                const bookId = spine.dataset.bookId;
+                const book = books.find(b => b.id === bookId);
+                if (book) {
+                    showBookDetails(book);
+                }
+            });
+        });
+        
+        filteredBooks = books;
+        return;
+    }
+
+    // If searching, filter from all loaded books
     filteredBooks = allBooks.filter(book => {
         // Search filter
         if (searchQuery) {
@@ -362,6 +458,7 @@ function filterBooks() {
         return true;
     });
 
+    // Render filtered results
     renderBookshelf();
 }
 

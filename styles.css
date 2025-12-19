@@ -246,6 +246,22 @@ header h1 {
         );
 }
 
+.shelf-loading {
+    color: rgba(255, 255, 255, 0.8);
+    text-align: center;
+    width: 100%;
+    padding: 2rem;
+    font-style: italic;
+}
+
+.shelf-empty {
+    color: rgba(255, 255, 255, 0.6);
+    text-align: center;
+    width: 100%;
+    padding: 2rem;
+    font-style: italic;
+}
+
 /* Book Spine - Realistic Library Style */
 .book-spine {
     width: 60px;
