@@ -151,6 +151,33 @@ function getDeweyDecimal(book) {
 }
 
 /**
+ * Get cover image URL from Project Gutenberg
+ */
+function getGutenbergCoverUrl(gutenbergId) {
+    // Project Gutenberg cover images are typically at:
+    // https://www.gutenberg.org/cache/epub/{id}/pg{id}.cover.medium.jpg
+    // or https://www.gutenberg.org/cache/epub/{id}/pg{id}.cover.small.jpg
+    // or https://www.gutenberg.org/files/{id}/{id}-h/images/cover.jpg
+    
+    // Try multiple possible cover image paths
+    const baseUrl = `https://www.gutenberg.org/cache/epub/${gutenbergId}`;
+    return `${baseUrl}/pg${gutenbergId}.cover.medium.jpg`;
+}
+
+/**
+ * Check if cover image exists (optional validation)
+ */
+async function checkCoverExists(url) {
+    return new Promise((resolve) => {
+        https.get(url, (res) => {
+            resolve(res.statusCode === 200);
+        }).on('error', () => {
+            resolve(false);
+        });
+    });
+}
+
+/**
  * Insert book into Supabase
  */
 async function insertBook(book) {
@@ -160,14 +187,28 @@ async function insertBook(book) {
     // Check if book already exists
     const { data: existing } = await supabase
         .from('books')
-        .select('id')
+        .select('id, cover_url')
         .eq('gutenberg_id', gutenbergId)
         .single();
     
     if (existing) {
-        console.log(`Book ${gutenbergId} already exists, skipping...`);
+        // If book exists but doesn't have a cover, try to add it
+        if (!existing.cover_url) {
+            const coverUrl = getGutenbergCoverUrl(gutenbergId);
+            // Optionally verify cover exists before updating
+            // const coverExists = await checkCoverExists(coverUrl);
+            // if (coverExists) {
+                await supabase
+                    .from('books')
+                    .update({ cover_url: coverUrl })
+                    .eq('id', existing.id);
+            // }
+        }
         return null;
     }
+    
+    // Get cover URL from Project Gutenberg
+    const coverUrl = getGutenbergCoverUrl(gutenbergId);
     
     const bookData = {
         gutenberg_id: gutenbergId,
@@ -178,7 +219,8 @@ async function insertBook(book) {
         subject: book['Subject'] || '',
         publisher: 'Project Gutenberg',
         publication_date: book['Release Date'] || null,
-        description: book['Note'] || ''
+        description: book['Note'] || '',
+        cover_url: coverUrl
     };
     
     const { data, error } = await supabase
@@ -229,6 +271,9 @@ async function populateBooks() {
                 console.error('Error processing book:', error.message);
                 errors++;
             }
+            
+            // Small delay between books to avoid rate limiting
+            await new Promise(resolve => setTimeout(resolve, 100));
         }
         
         // Small delay between batches

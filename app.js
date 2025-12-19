@@ -213,7 +213,7 @@ async function loadBooksForCategory(category) {
         
         const { data, error } = await supabase
             .from('books')
-            .select('id, gutenberg_id, title, author, dewey_decimal, language, subject, publication_date, faculty_id, description')
+            .select('id, gutenberg_id, title, author, dewey_decimal, language, subject, publication_date, faculty_id, description, cover_url')
             .gte('dewey_decimal', categoryStart)
             .lt('dewey_decimal', categoryEnd)
             .order('dewey_decimal', { ascending: true })
@@ -452,10 +452,15 @@ function renderBookSpine(book, index = 0) {
     // Add staggered animation delay for visual effect
     const animationDelay = (index % 20) * 0.03; // Stagger books in groups
     
+    // Add cover image as background if available
+    const coverStyle = book.cover_url 
+        ? `background-image: linear-gradient(to bottom, ${color}, ${color}), url('${escapeHtml(book.cover_url)}'); background-size: cover; background-blend-mode: overlay;`
+        : `background: ${color};`;
+    
     return `
         <div class="book-spine" 
              data-book-id="${book.id}" 
-             style="--spine-color: ${color}; animation-delay: ${animationDelay}s;"
+             style="--spine-color: ${color}; animation-delay: ${animationDelay}s; ${coverStyle}"
              title="${escapeHtml(title)} by ${escapeHtml(author)} - ${dewey}">
             <div class="spine-content">
                 <div class="spine-title">${displayTitle}</div>
