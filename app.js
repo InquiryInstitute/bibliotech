@@ -117,6 +117,30 @@ async function init() {
     if (closeEl) closeEl.addEventListener('click', closeModal);
     if (prevBtn) prevBtn.addEventListener('click', () => navigateCategory(-1));
     if (nextBtn) nextBtn.addEventListener('click', () => navigateCategory(1));
+    
+    // Marginalia form handlers
+    const showAddBtn = document.getElementById('show-add-marginalia');
+    const cancelBtn = document.getElementById('cancel-marginalia');
+    const marginaliaForm = document.getElementById('marginalia-form');
+    
+    if (showAddBtn) {
+        showAddBtn.addEventListener('click', () => {
+            document.getElementById('add-marginalia-form').style.display = 'block';
+            showAddBtn.style.display = 'none';
+        });
+    }
+    
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+            document.getElementById('add-marginalia-form').style.display = 'none';
+            if (showAddBtn) showAddBtn.style.display = 'inline-block';
+            marginaliaForm.reset();
+        });
+    }
+    
+    if (marginaliaForm) {
+        marginaliaForm.addEventListener('submit', handleMarginaliaSubmit);
+    }
     if (modalEl) {
         modalEl.addEventListener('click', (e) => {
             if (e.target.id === 'book-modal') {
@@ -524,12 +548,17 @@ async function filterBooks() {
     renderBookshelf();
 }
 
+// Store current book for marginalia
+let currentBook = null;
+
 /**
  * Show book details in modal
  */
-function showBookDetails(book) {
+async function showBookDetails(book) {
+    currentBook = book;
     const modal = document.getElementById('book-modal');
     const detailsEl = document.getElementById('book-details');
+    const marginaliaSection = document.getElementById('marginalia-section');
     
     const html = `
         <h2>${escapeHtml(book.title || 'Untitled')}</h2>
@@ -550,7 +579,11 @@ function showBookDetails(book) {
     `;
     
     detailsEl.innerHTML = html;
+    marginaliaSection.style.display = 'block';
     modal.style.display = 'block';
+    
+    // Load marginalia for this book
+    await loadMarginalia(book.id);
 }
 
 /**
@@ -567,6 +600,105 @@ function showError(message) {
     const bookshelfEl = document.getElementById('bookshelf');
     bookshelfEl.innerHTML = `<div class="error-message"><p>${escapeHtml(message)}</p></div>`;
     bookshelfEl.style.display = 'block';
+}
+
+/**
+ * Load marginalia for a book
+ */
+async function loadMarginalia(bookId) {
+    const marginaliaList = document.getElementById('marginalia-list');
+    if (!marginaliaList) return;
+    
+    try {
+        const { data, error } = await supabase
+            .from('marginalia')
+            .select('*, faculty:faculty_id(*)')
+            .eq('book_id', bookId)
+            .order('created_at', { ascending: false });
+        
+        if (error) {
+            console.error('Error loading marginalia:', error);
+            marginaliaList.innerHTML = '<p class="error">Failed to load comments.</p>';
+            return;
+        }
+        
+        if (!data || data.length === 0) {
+            marginaliaList.innerHTML = '<p class="no-marginalia">No faculty comments yet. Be the first to add one!</p>';
+            return;
+        }
+        
+        marginaliaList.innerHTML = data.map(m => `
+            <div class="marginalia-item">
+                <div class="marginalia-header">
+                    <strong>${escapeHtml(m.faculty?.name || 'Faculty Member')}</strong>
+                    <span class="marginalia-date">${new Date(m.created_at).toLocaleDateString()}</span>
+                </div>
+                ${m.location ? `<div class="marginalia-location">📍 ${escapeHtml(m.location)}</div>` : ''}
+                ${m.quote ? `<div class="marginalia-quote">"${escapeHtml(m.quote)}"</div>` : ''}
+                <div class="marginalia-comment">${escapeHtml(m.comment)}</div>
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        console.error('Error loading marginalia:', error);
+        marginaliaList.innerHTML = '<p class="error">Failed to load comments.</p>';
+    }
+}
+
+/**
+ * Handle marginalia form submission
+ */
+async function handleMarginaliaSubmit(e) {
+    e.preventDefault();
+    
+    if (!currentBook) {
+        alert('No book selected');
+        return;
+    }
+    
+    const location = document.getElementById('marginalia-location').value.trim();
+    const quote = document.getElementById('marginalia-quote').value.trim();
+    const comment = document.getElementById('marginalia-comment').value.trim();
+    
+    if (!comment) {
+        alert('Please enter a comment');
+        return;
+    }
+    
+    // For now, we'll use a placeholder faculty_id
+    // In production, this should come from authentication
+    const facultyId = prompt('Enter your faculty ID (or name):') || 'anonymous';
+    
+    try {
+        const { data, error } = await supabase
+            .from('marginalia')
+            .insert([{
+                book_id: currentBook.id,
+                faculty_id: facultyId,
+                location: location || null,
+                quote: quote || null,
+                comment: comment
+            }])
+            .select()
+            .single();
+        
+        if (error) {
+            throw error;
+        }
+        
+        // Reload marginalia
+        await loadMarginalia(currentBook.id);
+        
+        // Reset form
+        document.getElementById('marginalia-form').reset();
+        document.getElementById('add-marginalia-form').style.display = 'none';
+        const showAddBtn = document.getElementById('show-add-marginalia');
+        if (showAddBtn) showAddBtn.style.display = 'inline-block';
+        
+    } catch (error) {
+        console.error('Error adding marginalia:', error);
+        alert('Failed to add comment. Please try again.');
+    }
 }
 
 /**

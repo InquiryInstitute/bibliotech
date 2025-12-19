@@ -79,6 +79,30 @@
         <div class="modal-content">
             <span class="close">&times;</span>
             <div id="book-details"></div>
+            <div id="marginalia-section" class="marginalia-section" style="display: none;">
+                <h3>Faculty Marginalia</h3>
+                <div id="marginalia-list"></div>
+                <div id="add-marginalia-form" class="add-marginalia-form" style="display: none;">
+                    <h4>Add Comment</h4>
+                    <form id="marginalia-form">
+                        <div class="form-group">
+                            <label for="marginalia-location">Location (optional)</label>
+                            <input type="text" id="marginalia-location" placeholder="e.g., Chapter 3, Page 45">
+                        </div>
+                        <div class="form-group">
+                            <label for="marginalia-quote">Quote (optional)</label>
+                            <textarea id="marginalia-quote" rows="2" placeholder="The text you're commenting on"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="marginalia-comment">Comment *</label>
+                            <textarea id="marginalia-comment" rows="4" required placeholder="Your comment or annotation"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Comment</button>
+                        <button type="button" class="btn btn-secondary" id="cancel-marginalia">Cancel</button>
+                    </form>
+                </div>
+                <button id="show-add-marginalia" class="btn btn-secondary">Add Marginalia</button>
+            </div>
         </div>
     </div>
 
