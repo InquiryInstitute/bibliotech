@@ -149,6 +149,37 @@ async function init() {
         });
     }
     
+    // Book reader handlers
+    const closeReader = document.getElementById('close-reader');
+    const readerModal = document.getElementById('book-reader-modal');
+    const toggleMarginaliaBtn = document.getElementById('toggle-marginalia');
+    const prevPageBtn = document.getElementById('prev-page');
+    const nextPageBtn = document.getElementById('next-page');
+    
+    if (closeReader) {
+        closeReader.addEventListener('click', closeBookReader);
+    }
+    
+    if (readerModal) {
+        readerModal.addEventListener('click', (e) => {
+            if (e.target.id === 'book-reader-modal') {
+                closeBookReader();
+            }
+        });
+    }
+    
+    if (toggleMarginaliaBtn) {
+        toggleMarginaliaBtn.addEventListener('click', toggleMarginaliaDisplay);
+    }
+    
+    if (prevPageBtn) {
+        prevPageBtn.addEventListener('click', () => changePage(-1));
+    }
+    
+    if (nextPageBtn) {
+        nextPageBtn.addEventListener('click', () => changePage(1));
+    }
+    
     // Keyboard navigation
     document.addEventListener('keydown', (e) => {
         if (e.key === 'ArrowLeft' && !e.target.matches('input, textarea')) {
@@ -550,6 +581,10 @@ async function filterBooks() {
 
 // Store current book for marginalia
 let currentBook = null;
+let currentReaderBook = null;
+let currentPage = 1;
+let showMarginalia = false;
+let bookMarginalia = [];
 
 /**
  * Show book details in modal
@@ -572,8 +607,11 @@ async function showBookDetails(book) {
         </div>
         ${book.description ? `<div class="book-description"><p>${escapeHtml(book.description)}</p></div>` : ''}
         <div class="book-actions">
-            <a href="https://www.gutenberg.org/ebooks/${book.gutenberg_id}" target="_blank" class="btn btn-primary">
-                Read on Project Gutenberg
+            <button onclick="openBookReader('${book.id}')" class="btn btn-primary">
+                Read Book
+            </button>
+            <a href="https://www.gutenberg.org/ebooks/${book.gutenberg_id}" target="_blank" class="btn btn-secondary">
+                View on Project Gutenberg
             </a>
         </div>
     `;

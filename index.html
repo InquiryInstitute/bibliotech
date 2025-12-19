@@ -106,6 +106,42 @@
         </div>
     </div>
 
+    <!-- Book Reader Modal with Pageflip -->
+    <div id="book-reader-modal" class="modal">
+        <div class="modal-content reader-content">
+            <div class="reader-header">
+                <span class="close" id="close-reader">&times;</span>
+                <h2 id="reader-book-title"></h2>
+                <div class="reader-controls">
+                    <button id="toggle-marginalia" class="btn btn-secondary">Show Marginalia</button>
+                    <span id="reader-page-info">Page 1</span>
+                </div>
+            </div>
+            <div class="book-reader-container">
+                <div id="book-reader" class="book-reader">
+                    <div class="page-container">
+                        <div class="page left-page" id="left-page">
+                            <div class="page-content">
+                                <p>Loading book content...</p>
+                            </div>
+                            <div class="marginalia-overlay" id="left-marginalia"></div>
+                        </div>
+                        <div class="page right-page" id="right-page">
+                            <div class="page-content">
+                                <p>Loading book content...</p>
+                            </div>
+                            <div class="marginalia-overlay" id="right-marginalia"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="pageflip-controls">
+                    <button id="prev-page" class="pageflip-btn">← Previous</button>
+                    <button id="next-page" class="pageflip-btn">Next →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Configuration (load first) -->
     <script src="config.js"></script>
     <!-- Supabase Initialization -->
