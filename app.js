@@ -141,6 +141,15 @@ async function init() {
     if (marginaliaForm) {
         marginaliaForm.addEventListener('submit', handleMarginaliaSubmit);
     }
+    
+    const generateAIBtn = document.getElementById('generate-ai-marginalia');
+    if (generateAIBtn) {
+        generateAIBtn.addEventListener('click', async () => {
+            if (currentBook) {
+                await generateMarginaliaForBook(currentBook.id);
+            }
+        });
+    }
     if (modalEl) {
         modalEl.addEventListener('click', (e) => {
             if (e.target.id === 'book-modal') {
@@ -684,6 +693,51 @@ async function loadMarginalia(bookId) {
 }
 
 /**
+ * Generate marginalia algorithmically using AI faculty
+ */
+async function generateMarginaliaForBook(bookId) {
+    if (!confirm('Generate AI marginalia for this book? This may take a few minutes.')) {
+        return;
+    }
+    
+    const loadingMsg = document.createElement('div');
+    loadingMsg.className = 'loading-message';
+    loadingMsg.textContent = 'Generating AI marginalia... This may take a few minutes.';
+    const marginaliaList = document.getElementById('marginalia-list');
+    if (marginaliaList) {
+        marginaliaList.innerHTML = '';
+        marginaliaList.appendChild(loadingMsg);
+    }
+    
+    try {
+        // Call API endpoint or use Supabase Edge Function
+        // For now, we'll use a simple approach - in production, use an Edge Function
+        const response = await fetch('/api/generate-marginalia', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ book_id: bookId, num_pages: 5 })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to generate marginalia');
+        }
+        
+        // Reload marginalia
+        await loadMarginalia(bookId);
+        alert('Marginalia generation started! Check back in a few minutes.');
+        
+    } catch (error) {
+        console.error('Error generating marginalia:', error);
+        alert('Note: Marginalia generation requires a backend API. For now, use the manual form or run: npm run generate-marginalia <book-id>');
+        
+        // Show manual form as fallback
+        if (marginaliaList) {
+            marginaliaList.innerHTML = '<p>AI generation requires backend setup. Use the "Add Marginalia" button for manual entry.</p>';
+        }
+    }
+}
+
+/**
  * Handle marginalia form submission
  */
 async function handleMarginaliaSubmit(e) {
@@ -738,6 +792,198 @@ async function handleMarginaliaSubmit(e) {
         alert('Failed to add comment. Please try again.');
     }
 }
+
+/**
+ * Open book reader with pageflip view
+ */
+async function openBookReader(bookId) {
+    const book = allBooks.find(b => b.id === bookId) || filteredBooks.find(b => b.id === bookId);
+    if (!book) {
+        alert('Book not found');
+        return;
+    }
+    
+    currentReaderBook = book;
+    currentPage = 1;
+    showMarginalia = false;
+    
+    const readerModal = document.getElementById('book-reader-modal');
+    const readerTitle = document.getElementById('reader-book-title');
+    const toggleBtn = document.getElementById('toggle-marginalia');
+    
+    if (readerTitle) {
+        readerTitle.textContent = book.title || 'Untitled';
+    }
+    
+    if (toggleBtn) {
+        toggleBtn.textContent = 'Show Marginalia';
+    }
+    
+    // Load marginalia for this book
+    await loadMarginaliaForReader(bookId);
+    
+    // Load book content (for now, show placeholder - will need to fetch actual content)
+    loadBookPage(currentPage);
+    
+    if (readerModal) {
+        readerModal.style.display = 'block';
+    }
+}
+
+/**
+ * Close book reader
+ */
+function closeBookReader() {
+    const readerModal = document.getElementById('book-reader-modal');
+    if (readerModal) {
+        readerModal.style.display = 'none';
+    }
+    currentReaderBook = null;
+    currentPage = 1;
+    showMarginalia = false;
+}
+
+/**
+ * Load marginalia for reader view
+ */
+async function loadMarginaliaForReader(bookId) {
+    try {
+        const { data, error } = await supabase
+            .from('marginalia')
+            .select('*, faculty:faculty_id(*)')
+            .eq('book_id', bookId)
+            .order('created_at', { ascending: false });
+        
+        if (error) {
+            console.error('Error loading marginalia:', error);
+            bookMarginalia = [];
+            return;
+        }
+        
+        bookMarginalia = data || [];
+    } catch (error) {
+        console.error('Error loading marginalia:', error);
+        bookMarginalia = [];
+    }
+}
+
+/**
+ * Load book page content
+ */
+function loadBookPage(page) {
+    const leftPage = document.getElementById('left-page');
+    const rightPage = document.getElementById('right-page');
+    const leftContent = leftPage?.querySelector('.page-content');
+    const rightContent = rightPage?.querySelector('.page-content');
+    const pageInfo = document.getElementById('reader-page-info');
+    
+    // For now, show placeholder content
+    // In the future, this will fetch actual book content from Project Gutenberg
+    const placeholderText = `
+        <h3>Chapter ${page}</h3>
+        <p>This is a placeholder for book content. In the future, this will display the actual text from Project Gutenberg books.</p>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+        <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+        <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>
+    `;
+    
+    if (leftContent) {
+        leftContent.innerHTML = placeholderText;
+    }
+    
+    if (rightContent) {
+        rightContent.innerHTML = placeholderText;
+    }
+    
+    if (pageInfo) {
+        pageInfo.textContent = `Page ${page}`;
+    }
+    
+    // Render marginalia overlays
+    renderMarginaliaOverlay();
+}
+
+/**
+ * Render marginalia overlay on pages
+ */
+function renderMarginaliaOverlay() {
+    const leftOverlay = document.getElementById('left-marginalia');
+    const rightOverlay = document.getElementById('right-marginalia');
+    
+    if (!leftOverlay || !rightOverlay) return;
+    
+    // Clear existing overlays
+    leftOverlay.innerHTML = '';
+    rightOverlay.innerHTML = '';
+    
+    if (!showMarginalia || !bookMarginalia || bookMarginalia.length === 0) {
+        return;
+    }
+    
+    // Distribute marginalia between left and right pages
+    bookMarginalia.forEach((marg, index) => {
+        const note = document.createElement('div');
+        note.className = 'marginalia-note';
+        note.style.top = `${20 + (index % 5) * 120}px`;
+        note.style.left = index % 2 === 0 ? '10px' : 'auto';
+        note.style.right = index % 2 === 0 ? 'auto' : '10px';
+        
+        note.innerHTML = `
+            <div class="marginalia-author">${escapeHtml(marg.faculty?.name || 'Faculty')}</div>
+            <div class="marginalia-text">${escapeHtml(marg.comment)}</div>
+            ${marg.location ? `<div class="marginalia-location">${escapeHtml(marg.location)}</div>` : ''}
+        `;
+        
+        // Add click to show full details
+        note.addEventListener('click', () => {
+            showMarginaliaDetails(marg);
+        });
+        
+        // Add to left or right page
+        if (index % 2 === 0) {
+            leftOverlay.appendChild(note);
+        } else {
+            rightOverlay.appendChild(note);
+        }
+    });
+}
+
+/**
+ * Toggle marginalia display
+ */
+function toggleMarginaliaDisplay() {
+    showMarginalia = !showMarginalia;
+    const toggleBtn = document.getElementById('toggle-marginalia');
+    
+    if (toggleBtn) {
+        toggleBtn.textContent = showMarginalia ? 'Hide Marginalia' : 'Show Marginalia';
+    }
+    
+    renderMarginaliaOverlay();
+}
+
+/**
+ * Change page
+ */
+function changePage(direction) {
+    const newPage = currentPage + direction;
+    if (newPage < 1) return;
+    
+    currentPage = newPage;
+    loadBookPage(currentPage);
+}
+
+/**
+ * Show marginalia details in a tooltip/modal
+ */
+function showMarginaliaDetails(marg) {
+    // Could show a tooltip or open a small modal with full details
+    const quote = marg.quote ? `\n\nQuote: "${marg.quote}"` : '';
+    alert(`${marg.faculty?.name || 'Faculty'}\n${marg.comment}${quote}`);
+}
+
+// Make openBookReader available globally
+window.openBookReader = openBookReader;
 
 /**
  * Escape HTML to prevent XSS
