@@ -11,6 +11,7 @@
     "setup-db-cli": "chmod +x setup-database-cli.sh && ./setup-database-cli.sh",
     "populate": "node populate-books.js",
     "update-covers": "node update-covers.js",
+    "fix-authors": "node fix-authors.js",
     "generate-marginalia": "node generate-marginalia.js",
     "dev": "npm run build-config && npx serve ."
   },
