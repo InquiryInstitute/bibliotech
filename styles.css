@@ -187,14 +187,23 @@ header h1 {
     background: var(--wood-medium);
     padding: 0;
     border-radius: 0;
-    margin-bottom: 60px;
+    margin-bottom: 80px;
     box-shadow: 
-        0 8px 16px rgba(0,0,0,0.2),
-        inset 0 0 0 8px var(--wood-dark),
-        inset 0 0 0 10px rgba(0,0,0,0.1);
+        0 10px 20px rgba(0,0,0,0.25),
+        inset 0 0 0 10px var(--wood-dark),
+        inset 0 0 0 12px rgba(0,0,0,0.15);
     position: relative;
-    border-top: 12px solid var(--shelf-back);
-    border-bottom: 12px solid var(--shelf-back);
+    border-top: 14px solid var(--shelf-back);
+    border-bottom: 14px solid var(--shelf-back);
+    transition: transform 0.3s ease;
+}
+
+.bookshelf-section:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+        0 12px 24px rgba(0,0,0,0.3),
+        inset 0 0 0 10px var(--wood-dark),
+        inset 0 0 0 12px rgba(0,0,0,0.15);
 }
 
 .bookshelf-section::before {
@@ -232,18 +241,35 @@ header h1 {
 .book-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 4px;
     align-items: flex-end;
-    perspective: 1000px;
-    padding: 20px 15px;
-    min-height: 320px;
+    perspective: 1200px;
+    perspective-origin: center bottom;
+    padding: 25px 20px;
+    min-height: 340px;
     background: 
         repeating-linear-gradient(90deg, 
             transparent, 
-            transparent 58px, 
-            rgba(0,0,0,0.05) 58px, 
-            rgba(0,0,0,0.05) 60px
+            transparent 53px, 
+            rgba(0,0,0,0.04) 53px, 
+            rgba(0,0,0,0.04) 55px
         );
+    position: relative;
+}
+
+.book-row::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(0,0,0,0.1) 20%, 
+        rgba(0,0,0,0.1) 80%, 
+        transparent
+    );
 }
 
 .shelf-loading {
@@ -262,23 +288,36 @@ header h1 {
     font-style: italic;
 }
 
-/* Book Spine - Realistic Library Style */
+/* Book Spine - Animated Virtual Bookshelf Style */
 .book-spine {
-    width: 60px;
-    height: 300px;
+    width: 55px;
+    height: 320px;
     background: var(--spine-color, #8B4513);
     border-radius: 2px 2px 0 0;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     box-shadow: 
-        2px 0 4px rgba(0,0,0,0.4),
-        inset -2px 0 2px rgba(255,255,255,0.1),
-        inset 2px 0 2px rgba(0,0,0,0.2);
+        2px 0 6px rgba(0,0,0,0.3),
+        inset -1px 0 1px rgba(255,255,255,0.15),
+        inset 1px 0 1px rgba(0,0,0,0.25);
     transform-style: preserve-3d;
     margin-bottom: 0;
-    border-left: 1px solid rgba(255,255,255,0.1);
+    border-left: 1px solid rgba(255,255,255,0.15);
     border-right: 1px solid rgba(0,0,0,0.3);
+    transform-origin: left center;
+    animation: bookSettle 0.6s ease-out;
+}
+
+@keyframes bookSettle {
+    0% {
+        transform: translateX(-10px) rotateY(15deg);
+        opacity: 0;
+    }
+    100% {
+        transform: translateX(0) rotateY(0deg);
+        opacity: 1;
+    }
 }
 
 .book-spine::before {
@@ -290,19 +329,39 @@ header h1 {
     bottom: 0;
     background: linear-gradient(90deg, 
         transparent 0%, 
-        rgba(255,255,255,0.1) 50%, 
+        rgba(255,255,255,0.12) 50%, 
         transparent 100%);
+    pointer-events: none;
+    border-radius: 2px 2px 0 0;
+}
+
+.book-spine::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background: linear-gradient(180deg, 
+        rgba(255,255,255,0.2) 0%, 
+        transparent 50%, 
+        rgba(0,0,0,0.1) 100%);
     pointer-events: none;
 }
 
 .book-spine:hover {
-    transform: translateY(-8px) translateZ(10px) rotateY(-2deg);
+    transform: translateX(15px) translateY(-5px) rotateY(-25deg) scale(1.05);
     box-shadow: 
-        4px 0 12px rgba(0,0,0,0.5),
-        inset -2px 0 2px rgba(255,255,255,0.2),
+        8px 8px 20px rgba(0,0,0,0.4),
+        -2px 0 8px rgba(0,0,0,0.2),
+        inset -2px 0 2px rgba(255,255,255,0.25),
         inset 2px 0 2px rgba(0,0,0,0.3);
-    z-index: 10;
-    border-left: 2px solid rgba(255,255,255,0.2);
+    z-index: 100;
+    border-left: 2px solid rgba(255,255,255,0.3);
+}
+
+.book-spine:active {
+    transform: translateX(12px) translateY(-3px) rotateY(-20deg) scale(1.02);
 }
 
 .spine-content {
@@ -311,50 +370,82 @@ header h1 {
     left: 0;
     right: 0;
     bottom: 0;
-    padding: 15px 8px;
+    padding: 12px 6px;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
     color: white;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    text-shadow: 
+        1px 1px 2px rgba(0,0,0,0.7),
+        0 0 4px rgba(0,0,0,0.5);
     transform: rotate(-90deg);
     transform-origin: center;
-    width: 300px;
-    height: 60px;
-    left: -120px;
-    top: 120px;
-    padding-top: 25px;
+    width: 320px;
+    height: 55px;
+    left: -132px;
+    top: 132px;
+    padding-top: 20px;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.book-spine:hover .spine-content {
+    transform: rotate(-90deg) scale(1.1);
 }
 
 .spine-title {
-    font-weight: bold;
-    font-size: 11px;
-    line-height: 1.2;
-    margin-bottom: 4px;
+    font-weight: 700;
+    font-size: 10px;
+    line-height: 1.3;
+    margin-bottom: 3px;
     text-align: center;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     width: 100%;
+    letter-spacing: 0.3px;
+    transition: all 0.3s ease;
+}
+
+.book-spine:hover .spine-title {
+    font-size: 11px;
+    text-shadow: 
+        1px 1px 3px rgba(0,0,0,0.8),
+        0 0 6px rgba(0,0,0,0.6);
 }
 
 .spine-author {
-    font-size: 9px;
-    opacity: 0.9;
+    font-size: 8px;
+    opacity: 0.85;
     text-align: center;
-    margin-bottom: 4px;
+    margin-bottom: 3px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     width: 100%;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.book-spine:hover .spine-author {
+    opacity: 1;
+    font-size: 9px;
 }
 
 .spine-dewey {
-    font-size: 10px;
-    opacity: 0.8;
+    font-size: 9px;
+    opacity: 0.75;
     text-align: center;
     font-family: 'Courier New', monospace;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+    transition: all 0.3s ease;
+}
+
+.book-spine:hover .spine-dewey {
+    opacity: 0.9;
+    font-size: 10px;
 }
 
 /* Empty State - Library Style */
@@ -526,27 +617,52 @@ footer a:hover {
 /* Responsive Design */
 @media (max-width: 768px) {
     header h1 {
-        font-size: 2em;
+        font-size: 1.5rem;
+    }
+    
+    header .container {
+        flex-direction: column;
+        text-align: center;
     }
 
     .book-spine {
-        width: 50px;
-        height: 250px;
+        width: 45px;
+        height: 280px;
+    }
+    
+    .book-spine:hover {
+        transform: translateX(10px) translateY(-3px) rotateY(-20deg) scale(1.03);
     }
 
     .spine-content {
-        width: 250px;
-        height: 50px;
-        left: -100px;
-        top: 100px;
+        width: 280px;
+        height: 45px;
+        left: -117px;
+        top: 117px;
     }
 
     .spine-title {
-        font-size: 12px;
+        font-size: 9px;
+    }
+    
+    .book-spine:hover .spine-title {
+        font-size: 10px;
     }
 
     .spine-author {
-        font-size: 10px;
+        font-size: 7px;
+    }
+    
+    .book-spine:hover .spine-author {
+        font-size: 8px;
+    }
+    
+    .spine-dewey {
+        font-size: 8px;
+    }
+    
+    .book-spine:hover .spine-dewey {
+        font-size: 9px;
     }
 
     .controls {
@@ -561,5 +677,10 @@ footer a:hover {
     .modal-content {
         width: 95%;
         padding: 20px;
+    }
+    
+    .book-row {
+        gap: 3px;
+        padding: 20px 15px;
     }
 }

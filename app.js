@@ -199,7 +199,7 @@ async function loadBooks() {
                 if (books.length === 0) {
                     shelfEl.innerHTML = '<div class="shelf-empty">No books in this category</div>';
                 } else {
-                    shelfEl.innerHTML = books.map(book => renderBookSpine(book)).join('');
+                    shelfEl.innerHTML = books.map((book, index) => renderBookSpine(book, index)).join('');
                     
                     // Add click handlers
                     shelfEl.querySelectorAll('.book-spine').forEach(spine => {
@@ -321,9 +321,9 @@ function getCategoryName(code) {
 }
 
 /**
- * Render a single book spine
+ * Render a single book spine with animation delay
  */
-function renderBookSpine(book) {
+function renderBookSpine(book, index = 0) {
     const title = escapeHtml(book.title || 'Untitled');
     const author = escapeHtml(book.author || 'Unknown');
     const dewey = book.dewey_decimal || '000';
@@ -332,10 +332,16 @@ function renderBookSpine(book) {
     const color = getColorForDewey(dewey);
     
     // Truncate title if too long
-    const displayTitle = title.length > 30 ? title.substring(0, 27) + '...' : title;
+    const displayTitle = title.length > 28 ? title.substring(0, 25) + '...' : title;
+    
+    // Add staggered animation delay for visual effect
+    const animationDelay = (index % 20) * 0.03; // Stagger books in groups
     
     return `
-        <div class="book-spine" data-book-id="${book.id}" style="--spine-color: ${color}">
+        <div class="book-spine" 
+             data-book-id="${book.id}" 
+             style="--spine-color: ${color}; animation-delay: ${animationDelay}s;"
+             title="${escapeHtml(title)} by ${escapeHtml(author)}">
             <div class="spine-content">
                 <div class="spine-title">${displayTitle}</div>
                 <div class="spine-author">${author}</div>
@@ -411,7 +417,7 @@ async function filterBooks() {
         if (books.length === 0) {
             html += '<div class="shelf-empty">No books in this category</div>';
         } else {
-            html += books.map(book => renderBookSpine(book)).join('');
+            html += books.map((book, index) => renderBookSpine(book, index)).join('');
         }
         
         html += `</div></div>`;
