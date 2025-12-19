@@ -90,6 +90,8 @@ if (document.readyState === 'loading') {
 // State
 let allBooks = [];
 let filteredBooks = [];
+let currentCategoryIndex = 0;
+const DEWEY_CATEGORIES = ['000', '100', '200', '300', '400', '500', '600', '700', '800', '900'];
 
 /**
  * Initialize the application
@@ -107,10 +109,14 @@ async function init() {
     const filterEl = document.getElementById('dewey-filter');
     const closeEl = document.querySelector('.close');
     const modalEl = document.getElementById('book-modal');
+    const prevBtn = document.getElementById('prev-category');
+    const nextBtn = document.getElementById('next-category');
     
     if (searchEl) searchEl.addEventListener('input', handleSearch);
     if (filterEl) filterEl.addEventListener('change', handleFilter);
     if (closeEl) closeEl.addEventListener('click', closeModal);
+    if (prevBtn) prevBtn.addEventListener('click', () => navigateCategory(-1));
+    if (nextBtn) nextBtn.addEventListener('click', () => navigateCategory(1));
     if (modalEl) {
         modalEl.addEventListener('click', (e) => {
             if (e.target.id === 'book-modal') {
@@ -118,6 +124,15 @@ async function init() {
             }
         });
     }
+    
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft' && !e.target.matches('input, textarea')) {
+            navigateCategory(-1);
+        } else if (e.key === 'ArrowRight' && !e.target.matches('input, textarea')) {
+            navigateCategory(1);
+        }
+    });
 
     // Load books
     await loadBooks();
@@ -153,9 +168,25 @@ async function loadBooksForCategory(category) {
 }
 
 /**
- * Load all category structures first, then load books per shelf
+ * Navigate to a specific Dewey Decimal category
  */
-async function loadBooks() {
+async function navigateCategory(direction) {
+    const newIndex = currentCategoryIndex + direction;
+    
+    if (newIndex < 0 || newIndex >= DEWEY_CATEGORIES.length) {
+        return; // Can't go beyond first/last category
+    }
+    
+    currentCategoryIndex = newIndex;
+    await loadCategory(currentCategoryIndex);
+    updateNavigationUI();
+}
+
+/**
+ * Load and display a specific category
+ */
+async function loadCategory(index) {
+    const category = DEWEY_CATEGORIES[index];
     const loadingEl = document.getElementById('loading');
     const bookshelfEl = document.getElementById('bookshelf');
     const emptyStateEl = document.getElementById('empty-state');
@@ -165,67 +196,84 @@ async function loadBooks() {
     emptyStateEl.style.display = 'none';
 
     try {
-        // First, get a count of books per category to show shelf structure
-        const categories = ['000', '100', '200', '300', '400', '500', '600', '700', '800', '900'];
+        const books = await loadBooksForCategory(category);
         
-        // Render empty shelves first
-        let html = '';
-        const categoryData = {};
+        // Render the shelf
+        let html = `<div class="bookshelf-section" data-category="${category}">
+            <h3 class="category-header">${getCategoryName(category)}</h3>
+            <div class="book-row" id="shelf-${category}">`;
         
-        for (const category of categories) {
-            const categoryStart = category;
-            const categoryEnd = (parseInt(category) + 99).toString().padStart(3, '0');
-            
-            html += `<div class="bookshelf-section" data-category="${category}">
-                <h3 class="category-header">${getCategoryName(category)}</h3>
-                <div class="book-row" id="shelf-${category}">
-                    <div class="shelf-loading">Loading books...</div>
-                </div>
-            </div>`;
+        if (books.length === 0) {
+            html += '<div class="shelf-empty">No books in this category</div>';
+        } else {
+            html += books.map((book, bookIndex) => renderBookSpine(book, bookIndex)).join('');
         }
+        
+        html += `</div></div>`;
         
         bookshelfEl.innerHTML = html;
         bookshelfEl.style.display = 'block';
         loadingEl.style.display = 'none';
         
-        // Load books for each category in parallel
-        const loadPromises = categories.map(async (category) => {
-            const books = await loadBooksForCategory(category);
-            categoryData[category] = books;
-            
-            // Render books for this shelf
-            const shelfEl = document.getElementById(`shelf-${category}`);
-            if (shelfEl) {
-                if (books.length === 0) {
-                    shelfEl.innerHTML = '<div class="shelf-empty">No books in this category</div>';
-                } else {
-                    shelfEl.innerHTML = books.map((book, index) => renderBookSpine(book, index)).join('');
-                    
-                    // Add click handlers
-                    shelfEl.querySelectorAll('.book-spine').forEach(spine => {
-                        spine.addEventListener('click', () => {
-                            const bookId = spine.dataset.bookId;
-                            const book = books.find(b => b.id === bookId);
-                            if (book) {
-                                showBookDetails(book);
-                            }
-                        });
-                    });
+        // Add click handlers
+        bookshelfEl.querySelectorAll('.book-spine').forEach(spine => {
+            spine.addEventListener('click', () => {
+                const bookId = spine.dataset.bookId;
+                const book = books.find(b => b.id === bookId);
+                if (book) {
+                    showBookDetails(book);
                 }
-            }
+            });
         });
         
-        await Promise.all(loadPromises);
-        
-        // Store all books for search/filter functionality
-        allBooks = Object.values(categoryData).flat();
-        filteredBooks = [...allBooks];
+        // Store books for this category
+        filteredBooks = books;
         
     } catch (error) {
-        console.error('Error loading books:', error);
+        console.error('Error loading category:', error);
         loadingEl.style.display = 'none';
         showError(`Failed to load books: ${error.message}. Please check your Supabase configuration.`);
     }
+}
+
+/**
+ * Update navigation UI
+ */
+function updateNavigationUI() {
+    const prevBtn = document.getElementById('prev-category');
+    const nextBtn = document.getElementById('next-category');
+    const categoryNameEl = document.getElementById('current-category-name');
+    const categoryRangeEl = document.getElementById('current-category-range');
+    
+    // Update buttons
+    if (prevBtn) {
+        prevBtn.disabled = currentCategoryIndex === 0;
+        prevBtn.classList.toggle('disabled', currentCategoryIndex === 0);
+    }
+    
+    if (nextBtn) {
+        nextBtn.disabled = currentCategoryIndex === DEWEY_CATEGORIES.length - 1;
+        nextBtn.classList.toggle('disabled', currentCategoryIndex === DEWEY_CATEGORIES.length - 1);
+    }
+    
+    // Update category display
+    if (categoryNameEl) {
+        categoryNameEl.textContent = getCategoryName(DEWEY_CATEGORIES[currentCategoryIndex]);
+    }
+    
+    if (categoryRangeEl) {
+        categoryRangeEl.textContent = `Category ${currentCategoryIndex + 1} of ${DEWEY_CATEGORIES.length}`;
+    }
+}
+
+/**
+ * Load all category structures first, then load books per shelf
+ */
+async function loadBooks() {
+    // Start with first category
+    currentCategoryIndex = 0;
+    await loadCategory(currentCategoryIndex);
+    updateNavigationUI();
 }
 
 /**
@@ -385,10 +433,18 @@ function handleSearch() {
 function handleFilter() {
     const deweyFilter = document.getElementById('dewey-filter').value;
     if (!deweyFilter) {
-        // If "All Categories" selected, reload all shelves
-        loadBooks();
+        // If "All Categories" selected, go back to navigation mode
+        currentCategoryIndex = 0;
+        loadCategory(currentCategoryIndex);
+        updateNavigationUI();
     } else {
-        filterBooks();
+        // Find the category index and navigate to it
+        const categoryIndex = DEWEY_CATEGORIES.indexOf(deweyFilter);
+        if (categoryIndex !== -1) {
+            currentCategoryIndex = categoryIndex;
+            loadCategory(currentCategoryIndex);
+            updateNavigationUI();
+        }
     }
 }
 
