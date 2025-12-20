@@ -28,8 +28,6 @@ if (!projectRef) {
 // Or direct: postgresql://postgres:[password]@db.[project-ref].supabase.co:5432/postgres
 
 // Try to get database password from .env.db or use service role key as fallback
-const fs = require('fs');
-const path = require('path');
 let DB_PASSWORD = SUPABASE_SERVICE_ROLE_KEY; // Fallback
 
 try {

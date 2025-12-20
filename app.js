@@ -92,6 +92,7 @@ let allBooks = [];
 let filteredBooks = [];
 let currentCategoryIndex = 0;
 const DEWEY_CATEGORIES = ['000', '100', '200', '300', '400', '500', '600', '700', '800', '900'];
+let selectedSources = ['gutenberg', 'wikibooks', 'inquirer', 'iNQ', 'custom']; // Default: all sources
 
 /**
  * Initialize the application
@@ -111,12 +112,73 @@ async function init() {
     const modalEl = document.getElementById('book-modal');
     const prevBtn = document.getElementById('prev-category');
     const nextBtn = document.getElementById('next-category');
+    const settingsBtn = document.getElementById('settings-btn');
+    const settingsModal = document.getElementById('settings-modal');
+    const applySettingsBtn = document.getElementById('apply-settings');
+    const cancelSettingsBtn = document.getElementById('cancel-settings');
+    const sourceAllCheckbox = document.getElementById('source-all');
     
     if (searchEl) searchEl.addEventListener('input', handleSearch);
     if (filterEl) filterEl.addEventListener('change', handleFilter);
     if (closeEl) closeEl.addEventListener('click', closeModal);
     if (prevBtn) prevBtn.addEventListener('click', () => navigateCategory(-1));
     if (nextBtn) nextBtn.addEventListener('click', () => navigateCategory(1));
+    
+    // Settings modal handlers
+    if (settingsBtn) {
+        settingsBtn.addEventListener('click', () => {
+            if (settingsModal) {
+                settingsModal.style.display = 'block';
+                loadSettingsState();
+            }
+        });
+    }
+    
+    if (settingsModal) {
+        const modalClose = settingsModal.querySelector('.modal-close');
+        if (modalClose) {
+            modalClose.addEventListener('click', () => {
+                settingsModal.style.display = 'none';
+            });
+        }
+        
+        // Close on outside click
+        settingsModal.addEventListener('click', (e) => {
+            if (e.target === settingsModal) {
+                settingsModal.style.display = 'none';
+            }
+        });
+    }
+    
+    if (applySettingsBtn) {
+        applySettingsBtn.addEventListener('click', applySourceFilters);
+    }
+    
+    if (cancelSettingsBtn) {
+        cancelSettingsBtn.addEventListener('click', () => {
+            if (settingsModal) settingsModal.style.display = 'none';
+        });
+    }
+    
+    // Handle "All Sources" checkbox
+    if (sourceAllCheckbox) {
+        sourceAllCheckbox.addEventListener('change', (e) => {
+            const checkboxes = document.querySelectorAll('input[name="source"]:not(#source-all)');
+            checkboxes.forEach(cb => {
+                cb.checked = e.target.checked;
+            });
+        });
+    }
+    
+    // Update individual checkboxes to uncheck "All" when any individual is unchecked
+    document.querySelectorAll('input[name="source"]:not(#source-all)').forEach(cb => {
+        cb.addEventListener('change', () => {
+            if (sourceAllCheckbox) {
+                const allChecked = Array.from(document.querySelectorAll('input[name="source"]:not(#source-all)')).every(c => c.checked);
+                sourceAllCheckbox.checked = allChecked;
+            }
+        });
+    });
     
     // Marginalia form handlers
     const showAddBtn = document.getElementById('show-add-marginalia');
@@ -200,6 +262,9 @@ async function init() {
 
     // Load books
     await loadBooks();
+    
+    // Initialize source filter display
+    updateSourceFilterDisplay();
 }
 
 /**
@@ -211,11 +276,18 @@ async function loadBooksForCategory(category) {
         const categoryStart = category;
         const categoryEnd = (parseInt(category) + 99).toString().padStart(3, '0');
         
-        const { data, error } = await supabase
+        let query = supabase
             .from('books')
             .select('id, gutenberg_id, book_uri, source, source_id, title, author, dewey_decimal, language, subject, publication_date, faculty_id, description, cover_url')
             .gte('dewey_decimal', categoryStart)
-            .lt('dewey_decimal', categoryEnd)
+            .lt('dewey_decimal', categoryEnd);
+        
+        // Apply source filter if not showing all sources
+        if (selectedSources.length > 0 && selectedSources.length < 5) {
+            query = query.in('source', selectedSources);
+        }
+        
+        const { data, error } = await query
             .order('dewey_decimal', { ascending: true })
             .order('title', { ascending: true })
             .limit(1000); // Limit per category
@@ -494,6 +566,67 @@ function getColorForDewey(dewey) {
 /**
  * Handle search input
  */
+/**
+ * Load settings state into modal
+ */
+function loadSettingsState() {
+    const checkboxes = document.querySelectorAll('input[name="source"]:not(#source-all)');
+    checkboxes.forEach(cb => {
+        cb.checked = selectedSources.includes(cb.value);
+    });
+    
+    const sourceAllCheckbox = document.getElementById('source-all');
+    if (sourceAllCheckbox) {
+        sourceAllCheckbox.checked = selectedSources.length >= 5;
+    }
+}
+
+/**
+ * Apply source filters from settings
+ */
+async function applySourceFilters() {
+    const checkboxes = document.querySelectorAll('input[name="source"]:not(#source-all)');
+    selectedSources = Array.from(checkboxes)
+        .filter(cb => cb.checked)
+        .map(cb => cb.value);
+    
+    // Update filter display
+    updateSourceFilterDisplay();
+    
+    // Close modal
+    const settingsModal = document.getElementById('settings-modal');
+    if (settingsModal) {
+        settingsModal.style.display = 'none';
+    }
+    
+    // Reload current category with new filters
+    await loadCategory(currentCategoryIndex);
+}
+
+/**
+ * Update source filter display badge
+ */
+function updateSourceFilterDisplay() {
+    const displayEl = document.getElementById('source-filter-display');
+    if (!displayEl) return;
+    
+    if (selectedSources.length === 0) {
+        displayEl.innerHTML = '<span class="filter-badge">No Sources</span>';
+    } else if (selectedSources.length >= 5) {
+        displayEl.innerHTML = '<span class="filter-badge">All Sources</span>';
+    } else {
+        const sourceNames = {
+            'gutenberg': 'Gutenberg',
+            'wikibooks': 'Wikibooks',
+            'inquirer': 'Inquirer',
+            'iNQ': 'iNQ',
+            'custom': 'Custom'
+        };
+        const names = selectedSources.map(s => sourceNames[s] || s).join(', ');
+        displayEl.innerHTML = `<span class="filter-badge">${names}</span>`;
+    }
+}
+
 function handleSearch() {
     const query = document.getElementById('search').value.toLowerCase().trim();
     filterBooks();
