@@ -1,11 +1,11 @@
 name: Deploy to GitHub Pages
 
-on:
+"on":
   push:
     branches:
       - main
       - master
-  workflow_dispatch:
+  workflow_dispatch: {}
 
 permissions:
   contents: read
@@ -18,15 +18,14 @@ concurrency:
 
 jobs:
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       
       - name: Build config.js from secrets
+        if: ${{ secrets.SUPABASE_URL && secrets.SUPABASE_ANON_KEY }}
+        shell: bash
         run: |
           cat > config.js << EOF
           /**
@@ -45,7 +44,6 @@ jobs:
               module.exports = CONFIG;
           }
           EOF
-        if: ${{ secrets.SUPABASE_URL != '' && secrets.SUPABASE_ANON_KEY != '' }}
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
