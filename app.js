@@ -95,6 +95,147 @@ const DEWEY_CATEGORIES = ['000', '100', '200', '300', '400', '500', '600', '700'
 let selectedSources = ['gutenberg', 'wikibooks', 'inquirer', 'iNQ', 'custom']; // Default: all sources
 
 /**
+ * Spine color system
+ * - Books get "old leather" colors picked deterministically
+ * - Books in the same series share the same color
+ */
+const LEATHER_PALETTE = [
+    '#5b2a1f', // russet
+    '#6a3a1e', // saddle
+    '#4b2f1f', // walnut
+    '#5a3b22', // umber
+    '#4b1f1a', // mahogany
+    '#5a1c1c', // oxblood
+    '#6b1f3a', // burgundy
+    '#3b1f2a', // wine-dark
+    '#1f4b3a', // forest
+    '#244e2a', // deep green
+    '#1f2f4a', // navy
+    '#2b2a5a', // indigo
+    '#2a2a2a', // charcoal
+    '#3a3d42', // slate
+    '#1f4a4a', // deep teal
+    '#7a5a32'  // tan
+];
+
+function hashStringFNV1a(str) {
+    // 32-bit FNV-1a
+    let h = 0x811c9dc5;
+    for (let i = 0; i < str.length; i++) {
+        h ^= str.charCodeAt(i);
+        // h *= 16777619 (via shifts for 32-bit)
+        h = (h + ((h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24))) >>> 0;
+    }
+    return h >>> 0;
+}
+
+function clamp(n, min, max) {
+    return Math.max(min, Math.min(max, n));
+}
+
+function hexToRgb(hex) {
+    const h = hex.replace('#', '').trim();
+    if (h.length !== 6) return null;
+    const r = parseInt(h.slice(0, 2), 16);
+    const g = parseInt(h.slice(2, 4), 16);
+    const b = parseInt(h.slice(4, 6), 16);
+    if ([r, g, b].some(v => Number.isNaN(v))) return null;
+    return { r, g, b };
+}
+
+function rgbToHex({ r, g, b }) {
+    const toHex = (v) => clamp(Math.round(v), 0, 255).toString(16).padStart(2, '0');
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+function shadeHex(hex, amount) {
+    // amount in [-1, 1], negative darkens, positive lightens
+    const rgb = hexToRgb(hex);
+    if (!rgb) return hex;
+    const t = amount < 0 ? 0 : 255;
+    const p = Math.abs(amount);
+    return rgbToHex({
+        r: rgb.r + (t - rgb.r) * p,
+        g: rgb.g + (t - rgb.g) * p,
+        b: rgb.b + (t - rgb.b) * p
+    });
+}
+
+function normalizeSeriesTitle(title) {
+    if (!title) return null;
+    let t = String(title).trim();
+    if (!t) return null;
+
+    // Remove common trailing volume/part markers
+    const original = t;
+    t = t
+        .replace(/\s*\((?:vol(?:ume)?|book|part|no\.?|number|tome)\s*(?:\d+|[ivxlcdm]+)\)\s*$/i, '')
+        .replace(/\s*[-–—,:]\s*(?:vol(?:ume)?|book|part|no\.?|number|tome)\s*(?:\d+|[ivxlcdm]+)\s*$/i, '')
+        .replace(/\s*\b(?:vol(?:ume)?|book|part|no\.?|number|tome)\.?\s*(?:\d+|[ivxlcdm]+)\s*$/i, '')
+        .replace(/\s*\b(?:vol(?:ume)?|book|part)\s*(?:one|two|three|four|five|six|seven|eight|nine|ten)\s*$/i, '')
+        .trim();
+
+    // Only treat as a "series key" if it looks like we actually stripped volume metadata
+    if (t && t !== original) return t.toLowerCase();
+    return null;
+}
+
+function getSeriesKey(book) {
+    // If future schema adds explicit series field(s), prefer them automatically
+    const explicit =
+        book?.series ||
+        book?.series_name ||
+        book?.series_title ||
+        book?.collection ||
+        book?.collection_name;
+
+    if (explicit && String(explicit).trim()) {
+        return String(explicit).trim().toLowerCase();
+    }
+
+    // Heuristic from title (Volume / Book / Part patterns)
+    const titleKey = normalizeSeriesTitle(book?.title);
+    if (titleKey) return titleKey;
+
+    // Fallback: none
+    return null;
+}
+
+function safeCssUrlValue(url) {
+    if (!url) return 'none';
+    const u = encodeURI(String(url).trim())
+        .replace(/"/g, '%22')
+        .replace(/'/g, '%27')
+        .replace(/\)/g, '%29')
+        .replace(/\(/g, '%28');
+    // Use single quotes to avoid breaking the HTML style attribute.
+    return `url('${u}')`;
+}
+
+function getLeatherColor(seed) {
+    const h = hashStringFNV1a(seed);
+    const base = LEATHER_PALETTE[h % LEATHER_PALETTE.length];
+    // Small deterministic shade variation (-0.10..+0.06) for natural variety
+    const shade = (((h >>> 8) % 17) - 10) / 100;
+    return shadeHex(base, shade);
+}
+
+function getSpineVisuals(book) {
+    const seriesKey = getSeriesKey(book);
+    const bookKey = seriesKey
+        ? `series:${seriesKey}`
+        : `book:${book?.book_uri || book?.source + '://' + book?.source_id || book?.id || `${book?.title || ''}|${book?.author || ''}`}`;
+
+    const color = getLeatherColor(bookKey);
+    const h = hashStringFNV1a(bookKey);
+    // Wear: 0.15..0.75
+    const wear = 0.15 + ((h % 61) / 100);
+    // Grain angle: -8..+8 deg
+    const grain = -8 + ((h >>> 16) % 17);
+    return { color, wear: clamp(wear, 0.1, 0.85), grainAngle: grain };
+}
+
+/**
  * Initialize the application
  */
 async function init() {
@@ -508,12 +649,15 @@ function getCategoryName(code) {
  * Render a single book spine with animation delay
  */
 function renderBookSpine(book, index = 0) {
-    const title = escapeHtml(book.title || 'Untitled');
-    const author = escapeHtml(book.author || 'Unknown');
+    const rawTitle = book.title || 'Untitled';
+    const rawAuthor = book.author || 'Unknown';
+    const title = escapeHtml(rawTitle);
+    const author = escapeHtml(rawAuthor);
     const dewey = book.dewey_decimal || '000';
     
-    // Generate a color based on Dewey Decimal for visual variety
-    const color = getColorForDewey(dewey);
+    // Deterministic old-leather color per series (shared) or per book
+    const visuals = getSpineVisuals(book);
+    const color = visuals.color;
     
     // Truncate title and author if too long for spine
     const maxTitleLength = 30;
@@ -524,16 +668,15 @@ function renderBookSpine(book, index = 0) {
     // Add staggered animation delay for visual effect
     const animationDelay = (index % 20) * 0.03; // Stagger books in groups
     
-    // Add cover image as background if available
-    const coverStyle = book.cover_url 
-        ? `background-image: linear-gradient(to bottom, ${color}, ${color}), url('${escapeHtml(book.cover_url)}'); background-size: cover; background-blend-mode: overlay;`
-        : `background: ${color};`;
+    // Optional cover overlay (keeps leather texture underneath)
+    const coverImage = safeCssUrlValue(book.cover_url);
     
+    const tooltip = escapeAttribute(`${rawTitle} by ${rawAuthor} - ${dewey}`);
     return `
         <div class="book-spine" 
              data-book-id="${book.id}" 
-             style="--spine-color: ${color}; animation-delay: ${animationDelay}s; ${coverStyle}"
-             title="${escapeHtml(title)} by ${escapeHtml(author)} - ${dewey}">
+             style="--spine-color: ${color}; --spine-wear: ${visuals.wear.toFixed(2)}; --spine-grain-angle: ${visuals.grainAngle}deg; --spine-cover-image: ${coverImage}; animation-delay: ${animationDelay}s;"
+             title="${tooltip}">
             <div class="spine-content">
                 <div class="spine-title">${displayTitle}</div>
                 <div class="spine-author">${displayAuthor}</div>
@@ -543,25 +686,7 @@ function renderBookSpine(book, index = 0) {
     `;
 }
 
-/**
- * Get color for Dewey Decimal category
- */
-function getColorForDewey(dewey) {
-    const category = dewey.substring(0, 1);
-    const colors = {
-        '0': '#4A90E2', // Blue
-        '1': '#7B68EE', // Medium Slate Blue
-        '2': '#9370DB', // Medium Purple
-        '3': '#BA55D3', // Medium Orchid
-        '4': '#DA70D6', // Orchid
-        '5': '#FF69B4', // Hot Pink
-        '6': '#FF6347', // Tomato
-        '7': '#FF8C00', // Dark Orange
-        '8': '#FFA500', // Orange
-        '9': '#FFD700'  // Gold
-    };
-    return colors[category] || '#808080';
-}
+// Note: old Dewey-based rainbow palette removed in favor of leather palette + series grouping.
 
 /**
  * Handle search input
@@ -1191,6 +1316,18 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+/**
+ * Escape attribute values safely (quotes included)
+ */
+function escapeAttribute(text) {
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
 }
 
 // Initialize when DOM is ready
