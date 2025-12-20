@@ -1,4 +1,7 @@
-/* Bibliotech - Library Stylesheet */
+/* Bibliotech - Inquiry.Institute styling */
+
+/* Keep @import at top (CSS requirement) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=EB+Garamond:wght@400;500;600;700&family=Kalam:wght@300;400;700&family=Caveat:wght@400;700&display=swap');
 
 * {
     margin: 0;
@@ -7,31 +10,47 @@
 }
 
 :root {
-    --primary-color: #2563eb;
-    --secondary-color: #64748b;
-    --accent-color: #10b981;
-    --text-color: #1e293b;
-    --bg-color: #ffffff;
-    --bg-light: #f8fafc;
-    --border-color: #e2e8f0;
-    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    
-    /* Library colors */
-    --wood-dark: #8B4513;
-    --wood-medium: #A0522D;
-    --wood-light: #CD853F;
-    --shelf-back: #2C1810;
-    --library-bg: #F5E6D3;
-    --carpet: #8B4513;
+    /* Inquiry-like palette (warm ink + lantern-gold) */
+    --primary-color: #d2b26d;      /* lantern gold */
+    --secondary-color: #9aa3ad;    /* muted ink */
+    --accent-color: #e59f6c;       /* warm ember */
+    --text-color: #e8e2d9;         /* parchment-ink */
+    --bg-color: #0f1112;           /* night */
+    --bg-light: rgba(255, 255, 255, 0.06);
+    --border-color: rgba(255, 255, 255, 0.12);
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    --shadow-lg: 0 18px 60px rgba(0, 0, 0, 0.55);
+
+    /* Surfaces */
+    --surface-1: rgba(16, 18, 19, 0.78);
+    --surface-2: rgba(22, 24, 26, 0.92);
+    --surface-3: rgba(255, 255, 255, 0.03);
+
+    /* Library woods (kept, but deepened to match dark theme) */
+    --wood-dark: #4a2a18;
+    --wood-medium: #6a3a1e;
+    --wood-light: #9a6a3a;
+    --shelf-back: #1a100b;
+    --library-bg: var(--bg-color);
+    --carpet: #3a1f12;
+
+    /* Typography */
+    --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    --font-serif: 'EB Garamond', ui-serif, Georgia, 'Times New Roman', Times, serif;
+
+    /* Focus ring */
+    --focus: 0 0 0 3px rgba(210, 178, 109, 0.35);
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-family: var(--font-sans);
     background: var(--library-bg);
-    background-image: 
-        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(139, 69, 19, 0.03) 2px, rgba(139, 69, 19, 0.03) 4px),
-        linear-gradient(180deg, #F5E6D3 0%, #E8D5C4 100%);
+    background-image:
+        radial-gradient(1200px 800px at 20% 10%, rgba(210, 178, 109, 0.14), transparent 60%),
+        radial-gradient(900px 650px at 80% 20%, rgba(229, 159, 108, 0.10), transparent 60%),
+        radial-gradient(1100px 900px at 40% 110%, rgba(255, 255, 255, 0.04), transparent 60%),
+        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255, 255, 255, 0.015) 2px, rgba(255, 255, 255, 0.015) 4px),
+        linear-gradient(180deg, #0b0c0d 0%, #101214 100%);
     min-height: 100vh;
     color: var(--text-color);
     line-height: 1.6;
@@ -47,15 +66,14 @@ body.index-page::before {
     content: '';
     position: fixed;
     inset: 0;
-    background-image: var(
-        --index-bg-image,
-        url("https://static.wikia.nocookie.net/disney/images/f/f5/Beauty-and-the-beast-disneyscreencaps.com-6089.jpg/revision/latest?cb=20140619151632")
-    );
-    background-size: cover;
-    background-position: center top;
-    background-repeat: no-repeat;
+    /* No external images: inquiry-like depth + texture */
+    background:
+        radial-gradient(900px 620px at 15% 18%, rgba(210, 178, 109, 0.10), transparent 60%),
+        radial-gradient(800px 520px at 85% 20%, rgba(229, 159, 108, 0.08), transparent 60%),
+        radial-gradient(1200px 900px at 50% 95%, rgba(0, 0, 0, 0.25), transparent 60%),
+        linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.55) 100%);
     z-index: -2;
-    transform: scale(1.02);
+    transform: scale(1.01);
 }
 
 body.index-page::after {
@@ -63,8 +81,9 @@ body.index-page::after {
     position: fixed;
     inset: 0;
     background:
-        radial-gradient(ellipse at 30% 20%, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.65) 70%),
-        linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.55) 100%);
+        radial-gradient(ellipse at 30% 20%, rgba(0, 0, 0, 0.10) 0%, rgba(0, 0, 0, 0.55) 70%),
+        radial-gradient(ellipse at 80% 10%, rgba(210, 178, 109, 0.05) 0%, transparent 55%),
+        linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.55) 100%);
     z-index: -1;
 }
 
@@ -76,8 +95,11 @@ body.index-page::after {
 
 /* Header - Match Inquiry.Institute Style */
 header {
-    background-color: var(--bg-color);
-    box-shadow: var(--shadow);
+    background: rgba(10, 12, 13, 0.72);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 10px 35px rgba(0,0,0,0.45);
     position: sticky;
     top: 0;
     z-index: 100;
@@ -110,12 +132,14 @@ nav .container {
 }
 
 .lantern, .candle {
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-    animation: gentle-sway 3s ease-in-out infinite;
+    filter:
+        drop-shadow(0 6px 14px rgba(0, 0, 0, 0.45))
+        drop-shadow(0 0 16px rgba(210, 178, 109, 0.20));
+    animation: gentle-sway 4.5s ease-in-out infinite;
 }
 
 .candle {
-    animation-delay: 1.5s;
+    animation-delay: 1.7s;
 }
 
 @keyframes gentle-sway {
@@ -127,6 +151,28 @@ nav .container {
     }
 }
 
+/* Candle flame flicker (targets the flame ellipses in the inline SVG) */
+.candle ellipse {
+    transform-origin: 15px 4px;
+    animation: flame-flicker 1.8s ease-in-out infinite;
+}
+
+.candle ellipse:nth-of-type(2) {
+    animation-duration: 1.25s;
+    animation-delay: 0.15s;
+}
+
+@keyframes flame-flicker {
+    0%, 100% { transform: scale(1) translateY(0); opacity: 0.85; }
+    50% { transform: scale(1.05) translateY(-0.4px); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .lantern, .candle, .candle ellipse {
+        animation: none !important;
+    }
+}
+
 @media (max-width: 768px) {
     .header-decoration {
         display: none;
@@ -134,14 +180,18 @@ nav .container {
 }
 
 .logo h1 {
-    font-size: 1.5rem;
-    color: var(--primary-color);
+    font-family: var(--font-serif);
+    font-size: 1.7rem;
+    letter-spacing: 0.3px;
+    color: var(--text-color);
     margin-bottom: 0.25rem;
 }
 
 .logo .subtitle {
     font-size: 0.875rem;
-    color: var(--secondary-color);
+    color: rgba(232, 226, 217, 0.72);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
 }
 
 .nav-links {
@@ -154,7 +204,7 @@ nav .container {
 
 .nav-links a {
     text-decoration: none;
-    color: var(--text-color);
+    color: rgba(232, 226, 217, 0.86);
     font-weight: 500;
     transition: color 0.3s;
 }
@@ -166,7 +216,7 @@ nav .container {
 .settings-btn {
     background: none;
     border: none;
-    color: var(--text-color);
+    color: rgba(232, 226, 217, 0.86);
     cursor: pointer;
     padding: 0.5rem;
     display: flex;
@@ -178,12 +228,24 @@ nav .container {
 
 .settings-btn:hover {
     color: var(--primary-color);
-    background: var(--bg-light);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+button:focus-visible,
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+    outline: none;
+    box-shadow: var(--focus);
+    border-radius: 6px;
 }
 
 /* Library Info - Card Style */
 .library-info {
-    background: white;
+    background: var(--surface-1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     padding: 2rem;
     border-radius: 8px;
     margin: 2rem auto;
@@ -193,16 +255,17 @@ nav .container {
 }
 
 .library-info h2 {
-    color: var(--wood-dark);
+    font-family: var(--font-serif);
+    color: var(--text-color);
     margin-bottom: 1rem;
-    font-size: 1.75rem;
-    font-weight: 600;
+    font-size: 2rem;
+    font-weight: 700;
 }
 
 .library-info p {
     margin-bottom: 1.5rem;
-    color: var(--secondary-color);
-    font-size: 1rem;
+    color: rgba(232, 226, 217, 0.78);
+    font-size: 1.05rem;
 }
 
 .controls {
@@ -222,11 +285,11 @@ nav .container {
 .filter-badge {
     display: inline-block;
     padding: 0.5rem 1rem;
-    background: var(--bg-light);
+    background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--border-color);
     border-radius: 1rem;
     font-size: 0.875rem;
-    color: var(--text-color);
+    color: rgba(232, 226, 217, 0.86);
     font-weight: 500;
 }
 
@@ -237,16 +300,17 @@ nav .container {
     gap: 2rem;
     margin-top: 1.5rem;
     padding: 1rem;
-    background: white;
+    background: var(--surface-2);
     border-radius: 8px;
     box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
 }
 
 .nav-btn {
     padding: 0.75rem 1.5rem;
-    background: var(--primary-color);
-    color: white;
-    border: none;
+    background: linear-gradient(180deg, rgba(210, 178, 109, 0.22) 0%, rgba(210, 178, 109, 0.14) 100%);
+    color: rgba(232, 226, 217, 0.92);
+    border: 1px solid rgba(210, 178, 109, 0.30);
     border-radius: 6px;
     font-weight: 600;
     cursor: pointer;
@@ -258,7 +322,8 @@ nav .container {
 }
 
 .nav-btn:hover:not(.disabled) {
-    background: #1e40af;
+    border-color: rgba(210, 178, 109, 0.55);
+    background: linear-gradient(180deg, rgba(210, 178, 109, 0.30) 0%, rgba(210, 178, 109, 0.18) 100%);
     transform: translateY(-2px);
     box-shadow: var(--shadow-lg);
 }
@@ -270,7 +335,8 @@ nav .container {
 .nav-btn.disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    background: var(--secondary-color);
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
 }
 
 .nav-btn span {
@@ -289,49 +355,61 @@ nav .container {
 .dewey-indicator #current-category-name {
     font-size: 1.1rem;
     font-weight: 600;
-    color: var(--text-color);
+    color: rgba(232, 226, 217, 0.92);
 }
 
 .dewey-range {
     font-size: 0.85rem;
-    color: var(--secondary-color);
+    color: rgba(232, 226, 217, 0.66);
 }
 
 #search {
     flex: 1;
     min-width: 200px;
     padding: 12px 15px;
-    border: 2px solid var(--border-color);
+    border: 1px solid var(--border-color);
     border-radius: 5px;
     font-size: 16px;
     transition: border-color 0.3s;
+    background: rgba(0, 0, 0, 0.25);
+    color: rgba(232, 226, 217, 0.92);
 }
 
 #search:focus {
     outline: none;
-    border-color: var(--secondary-color);
+    border-color: rgba(210, 178, 109, 0.55);
+}
+
+#search::placeholder {
+    color: rgba(232, 226, 217, 0.55);
 }
 
 #dewey-filter {
     padding: 12px 15px;
-    border: 2px solid var(--border-color);
+    border: 1px solid var(--border-color);
     border-radius: 5px;
     font-size: 16px;
-    background: white;
+    background: rgba(0, 0, 0, 0.25);
     cursor: pointer;
     transition: border-color 0.3s;
+    color: rgba(232, 226, 217, 0.92);
+}
+
+#dewey-filter option {
+    background: #0f1112;
+    color: rgba(232, 226, 217, 0.92);
 }
 
 #dewey-filter:focus {
     outline: none;
-    border-color: var(--secondary-color);
+    border-color: rgba(210, 178, 109, 0.55);
 }
 
 /* Loading State - Library Style */
 .loading {
     text-align: center;
     padding: 60px 20px;
-    background: white;
+    background: var(--surface-1);
     border-radius: 8px;
     box-shadow: var(--shadow-lg);
     max-width: 600px;
@@ -341,7 +419,7 @@ nav .container {
 
 .spinner {
     border: 4px solid #f3f3f3;
-    border-top: 4px solid var(--secondary-color);
+    border-top: 4px solid rgba(210, 178, 109, 0.9);
     border-radius: 50%;
     width: 50px;
     height: 50px;
@@ -629,7 +707,7 @@ nav .container {
 
 /* Empty State - Library Style */
 .empty-state {
-    background: white;
+    background: var(--surface-1);
     padding: 60px 20px;
     text-align: center;
     border-radius: 8px;
@@ -640,18 +718,19 @@ nav .container {
 }
 
 .empty-state p {
-    color: var(--secondary-color);
+    color: rgba(232, 226, 217, 0.75);
     font-size: 1.1rem;
 }
 
 /* Error Message */
 .error-message {
-    background: rgba(255, 255, 255, 0.95);
+    background: var(--surface-1);
     padding: 30px;
     border-radius: 10px;
     box-shadow: var(--shadow);
     text-align: center;
     color: #e74c3c;
+    border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 /* Modal */
@@ -673,7 +752,7 @@ nav .container {
 }
 
 .modal-content {
-    background-color: white;
+    background-color: rgba(16, 18, 19, 0.96);
     margin: 5% auto;
     padding: 40px;
     border-radius: 10px;
@@ -681,8 +760,9 @@ nav .container {
     max-width: 600px;
     max-height: 80vh;
     overflow-y: auto;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    box-shadow: 0 18px 60px rgba(0,0,0,0.65);
     animation: slideDown 0.3s;
+    border: 1px solid var(--border-color);
 }
 
 @keyframes slideDown {
@@ -707,7 +787,7 @@ nav .container {
 
 .close:hover,
 .close:focus {
-    color: #000;
+    color: rgba(210, 178, 109, 0.95);
 }
 
 /* Settings Modal Styles */
@@ -722,7 +802,8 @@ nav .container {
 
 .modal-header h2 {
     margin: 0;
-    color: var(--text-color);
+    font-family: var(--font-serif);
+    color: rgba(232, 226, 217, 0.95);
     font-size: 1.75rem;
 }
 
@@ -730,7 +811,7 @@ nav .container {
     background: none;
     border: none;
     font-size: 2rem;
-    color: var(--secondary-color);
+    color: rgba(232, 226, 217, 0.75);
     cursor: pointer;
     line-height: 1;
     padding: 0;
@@ -744,8 +825,8 @@ nav .container {
 }
 
 .modal-close:hover {
-    background: var(--bg-light);
-    color: var(--text-color);
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(232, 226, 217, 0.95);
 }
 
 .modal-body {
@@ -765,7 +846,8 @@ nav .container {
 }
 
 .settings-section h3 {
-    color: var(--text-color);
+    font-family: var(--font-serif);
+    color: rgba(232, 226, 217, 0.92);
     margin-bottom: 1rem;
     font-size: 1.25rem;
 }
@@ -787,7 +869,7 @@ nav .container {
 }
 
 .checkbox-label:hover {
-    background: var(--bg-light);
+    background: rgba(255, 255, 255, 0.04);
 }
 
 .checkbox-label input[type="checkbox"] {
@@ -798,7 +880,7 @@ nav .container {
 }
 
 .checkbox-label span {
-    color: var(--text-color);
+    color: rgba(232, 226, 217, 0.88);
     font-weight: 500;
     user-select: none;
 }
@@ -809,15 +891,15 @@ nav .container {
 
 .book-meta p {
     margin: 10px 0;
-    color: #666;
+    color: rgba(232, 226, 217, 0.78);
 }
 
 .book-description {
     margin: 20px 0;
     padding: 20px;
-    background: #f9f9f9;
+    background: rgba(255, 255, 255, 0.04);
     border-radius: 5px;
-    border-left: 4px solid var(--secondary-color);
+    border-left: 3px solid rgba(210, 178, 109, 0.55);
 }
 
 .book-actions {
@@ -833,7 +915,8 @@ nav .container {
 }
 
 .marginalia-section h3 {
-    color: var(--wood-dark);
+    font-family: var(--font-serif);
+    color: rgba(232, 226, 217, 0.92);
     margin-bottom: 1rem;
     font-size: 1.5rem;
 }
@@ -843,11 +926,11 @@ nav .container {
 }
 
 .marginalia-item {
-    background: var(--bg-light);
+    background: rgba(255, 255, 255, 0.04);
     padding: 1.25rem;
     border-radius: 8px;
     margin-bottom: 1rem;
-    border-left: 4px solid var(--primary-color);
+    border-left: 3px solid rgba(210, 178, 109, 0.55);
     box-shadow: var(--shadow);
 }
 
@@ -859,47 +942,47 @@ nav .container {
 }
 
 .marginalia-header strong {
-    color: var(--primary-color);
+    color: rgba(210, 178, 109, 0.95);
     font-size: 1rem;
 }
 
 .marginalia-date {
-    color: var(--secondary-color);
+    color: rgba(232, 226, 217, 0.60);
     font-size: 0.85rem;
 }
 
 .marginalia-location {
-    color: var(--secondary-color);
+    color: rgba(232, 226, 217, 0.65);
     font-size: 0.9rem;
     font-style: italic;
     margin-bottom: 0.5rem;
 }
 
 .marginalia-quote {
-    background: white;
+    background: rgba(0, 0, 0, 0.20);
     padding: 0.75rem;
-    border-left: 3px solid var(--accent-color);
+    border-left: 3px solid rgba(229, 159, 108, 0.65);
     margin-bottom: 0.75rem;
     font-style: italic;
-    color: var(--text-color);
+    color: rgba(232, 226, 217, 0.86);
     border-radius: 4px;
 }
 
 .marginalia-comment {
-    color: var(--text-color);
+    color: rgba(232, 226, 217, 0.86);
     line-height: 1.6;
     white-space: pre-wrap;
 }
 
 .no-marginalia {
-    color: var(--secondary-color);
+    color: rgba(232, 226, 217, 0.65);
     font-style: italic;
     text-align: center;
     padding: 2rem;
 }
 
 .add-marginalia-form {
-    background: var(--bg-light);
+    background: rgba(255, 255, 255, 0.04);
     padding: 1.5rem;
     border-radius: 8px;
     margin-top: 1.5rem;
@@ -907,7 +990,8 @@ nav .container {
 }
 
 .add-marginalia-form h4 {
-    color: var(--primary-color);
+    font-family: var(--font-serif);
+    color: rgba(210, 178, 109, 0.95);
     margin-bottom: 1rem;
 }
 
@@ -919,24 +1003,26 @@ nav .container {
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 600;
-    color: var(--text-color);
+    color: rgba(232, 226, 217, 0.88);
 }
 
 .add-marginalia-form input,
 .add-marginalia-form textarea {
     width: 100%;
     padding: 0.75rem;
-    border: 2px solid var(--border-color);
+    border: 1px solid var(--border-color);
     border-radius: 6px;
     font-size: 1rem;
     font-family: inherit;
     transition: border-color 0.3s;
+    background: rgba(0, 0, 0, 0.25);
+    color: rgba(232, 226, 217, 0.92);
 }
 
 .add-marginalia-form input:focus,
 .add-marginalia-form textarea:focus {
     outline: none;
-    border-color: var(--primary-color);
+    border-color: rgba(210, 178, 109, 0.55);
 }
 
 .add-marginalia-form .btn {
@@ -959,31 +1045,50 @@ nav .container {
 .loading-message {
     text-align: center;
     padding: 2rem;
-    color: var(--secondary-color);
+    color: rgba(232, 226, 217, 0.70);
     font-style: italic;
 }
 
 .btn {
     display: inline-block;
     padding: 12px 30px;
-    background: var(--secondary-color);
-    color: white;
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(232, 226, 217, 0.90);
     text-decoration: none;
     border-radius: 5px;
-    transition: background 0.3s;
+    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
     font-weight: bold;
+    border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .btn:hover {
-    background: #2980b9;
+    background: rgba(255, 255, 255, 0.10);
+    transform: translateY(-1px);
+}
+
+.btn:active {
+    transform: translateY(0);
 }
 
 .btn-primary {
-    background: var(--secondary-color);
+    background: linear-gradient(180deg, rgba(210, 178, 109, 0.28) 0%, rgba(210, 178, 109, 0.16) 100%);
+    border-color: rgba(210, 178, 109, 0.35);
 }
 
 .btn-primary:hover {
-    background: #2980b9;
+    background: linear-gradient(180deg, rgba(210, 178, 109, 0.36) 0%, rgba(210, 178, 109, 0.20) 100%);
+    border-color: rgba(210, 178, 109, 0.55);
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.14);
+    color: rgba(232, 226, 217, 0.90);
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.10);
+    border-color: rgba(255, 255, 255, 0.18);
 }
 
 /* Footer - Library Style */
@@ -1024,9 +1129,6 @@ footer a:hover {
     text-shadow: 0 0 4px rgba(255,255,255,0.5);
 }
 
-/* Handwriting Font for Marginalia */
-@import url('https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&family=Caveat:wght@400;700&display=swap');
-
 /* Book Reader Styles */
 .reader-content {
     max-width: 95vw;
@@ -1038,18 +1140,20 @@ footer a:hover {
 }
 
 .reader-header {
-    background: var(--wood-dark);
-    color: white;
+    background: linear-gradient(180deg, rgba(16, 18, 19, 0.92) 0%, rgba(16, 18, 19, 0.78) 100%);
+    color: rgba(232, 226, 217, 0.92);
     padding: 1rem 1.5rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
     gap: 1rem;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .reader-header h2 {
-    color: white;
+    font-family: var(--font-serif);
+    color: rgba(232, 226, 217, 0.95);
     margin: 0;
     font-size: 1.25rem;
     flex: 1;
@@ -1062,14 +1166,14 @@ footer a:hover {
 }
 
 #reader-page-info {
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(232, 226, 217, 0.72);
     font-size: 0.9rem;
 }
 
 .book-reader-container {
     flex: 1;
     overflow: hidden;
-    background: #f5f5f5;
+    background: rgba(0, 0, 0, 0.20);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1096,7 +1200,7 @@ footer a:hover {
 .page {
     width: 50%;
     min-height: 700px;
-    background: #fff;
+    background: #f4efe7;
     padding: 3rem;
     box-sizing: border-box;
     position: relative;
@@ -1113,7 +1217,7 @@ footer a:hover {
 }
 
 .page-content {
-    font-family: 'Georgia', 'Times New Roman', serif;
+    font-family: var(--font-serif);
     font-size: 1.1rem;
     line-height: 1.8;
     color: #333;
@@ -1137,8 +1241,8 @@ footer a:hover {
     position: absolute;
     font-family: 'Kalam', 'Caveat', cursive;
     font-size: 0.9rem;
-    color: #8B4513;
-    background: rgba(255, 255, 240, 0.95);
+    color: #3a2618;
+    background: rgba(255, 252, 245, 0.96);
     padding: 0.5rem 0.75rem;
     border-radius: 4px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
@@ -1210,9 +1314,9 @@ footer a:hover {
 
 .pageflip-btn {
     padding: 0.75rem 2rem;
-    background: var(--primary-color);
-    color: white;
-    border: none;
+    background: linear-gradient(180deg, rgba(210, 178, 109, 0.28) 0%, rgba(210, 178, 109, 0.16) 100%);
+    color: rgba(232, 226, 217, 0.92);
+    border: 1px solid rgba(210, 178, 109, 0.30);
     border-radius: 6px;
     font-weight: 600;
     cursor: pointer;
@@ -1221,7 +1325,8 @@ footer a:hover {
 }
 
 .pageflip-btn:hover:not(:disabled) {
-    background: #1e40af;
+    border-color: rgba(210, 178, 109, 0.55);
+    background: linear-gradient(180deg, rgba(210, 178, 109, 0.36) 0%, rgba(210, 178, 109, 0.20) 100%);
     transform: translateY(-2px);
     box-shadow: var(--shadow-lg);
 }
