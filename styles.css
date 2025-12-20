@@ -47,7 +47,10 @@ body.index-page::before {
     content: '';
     position: fixed;
     inset: 0;
-    background-image: url('assets/beauty-and-the-beast-library.jpg');
+    background-image: var(
+        --index-bg-image,
+        url("https://static.wikia.nocookie.net/disney/images/f/f5/Beauty-and-the-beast-disneyscreencaps.com-6089.jpg/revision/latest?cb=20140619151632")
+    );
     background-size: cover;
     background-position: center top;
     background-repeat: no-repeat;
