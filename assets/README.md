@@ -1,8 +1,8 @@
 ## Index background image
 
-Place your Beauty & the Beast library image at:
+The background image is located at:
 
-- `assets/beauty-and-the-beast-library.jpg`
+- `assets/f1b2f576b973d97b4c28c5695446f933.webp`
 
-This repo intentionally does not include copyrighted artwork; you supply the image file.
+This image is used as the background for the bibliotech index page with dark theme overlays applied.
 
