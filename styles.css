@@ -290,7 +290,7 @@ nav .container {
 .settings-btn {
     background: none;
     border: none;
-    color: var(--slate-700, #334155);
+    color: rgba(232, 226, 217, 0.86);
     cursor: pointer;
     padding: 0.5rem;
     display: flex;
@@ -301,8 +301,8 @@ nav .container {
 }
 
 .settings-btn:hover {
-    color: var(--amber-600, #d97706);
-    background: rgba(0, 0, 0, 0.05);
+    color: var(--primary-color, #d2b26d);
+    background: rgba(255, 255, 255, 0.05);
 }
 
 button:focus-visible,
